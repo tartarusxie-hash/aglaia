@@ -1,0 +1,112 @@
+---
+// 资源库顶部泡泡轨道（Apple 式滑动胶囊）：「全部」+ 八个分区，选中项是半透明滑动胶囊。
+// 用户 2026-11-15：不要黑色泡泡——改成苹果官方套件常用的透明泡泡模式
+// （浅灰轨道 + 半透明白胶囊 + 细阴影，选中项文字深色）；「全部」常驻，
+// 在任何分区页点「全部」都能直接回枢纽，不必先点回资源库。
+// 用户 2026-11-15：轨道置顶吸住——滚动时贴在站点头栏（h-14）下方不走，
+// 随时可切分区；吸住时自带半透明底 + 毛玻璃，滚过的内容不透出来。
+// 胶囊用 CSS transform 滑动；点选时先滑过去再跳转（约 280ms），减动效时直接跳转。
+import { dict, lp, type Lang } from "../lib/i18n";
+import { LIBRARY_SECTIONS, type LibrarySection } from "../lib/library";
+
+interface Props { lang: Lang; active?: LibrarySection | "all" | "" }
+const { lang, active = "" } = Astro.props;
+const d = dict(lang);
+// 槽位数恒为 9（全部 + 八分区），胶囊宽 (100%-8px)/9。
+const activeIndex = active === "all" ? 0 : active === "" ? -1 : LIBRARY_SECTIONS.findIndex((s) => s.key === active) + 1;
+const label = (key: LibrarySection) => d.nav[key];
+const capsuleClass = "absolute bottom-1 left-1 top-1 w-[calc((100%-8px)/9)] rounded-full bg-white/80 shadow-[0_1px_3px_rgba(0,0,0,0.10)] ring-1 ring-black/[0.05] backdrop-blur-md transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]";
+---
+
+<nav aria-label={lang === "en" ? "Library sections" : "资源库分区"} class="sticky top-14 z-30 -mx-4 mt-6 overflow-x-auto bg-bg/90 px-4 py-2 backdrop-blur-md sm:-mx-6 sm:px-6">
+  <div
+    data-lib-track
+    class="relative flex min-w-[420px] rounded-full bg-subtle p-1"
+    style={activeIndex >= 0 ? `--track-index: ${activeIndex}` : undefined}
+  >
+    {activeIndex >= 0 && (
+      <span
+        data-lib-capsule
+        aria-hidden="true"
+        class={capsuleClass}
+        style={`transform: translateX(calc(var(--track-index, 0) * 100%))`}
+      />
+    )}
+    <a
+      href={lp(lang, "/library")}
+      data-lib-track-link
+      data-lib-track-index={0}
+      aria-pressed={active === "all"}
+      aria-current={active === "all" ? "page" : undefined}
+      class={`relative z-10 flex-1 whitespace-nowrap rounded-full py-2 text-center text-[13px] font-medium transition-colors duration-300 sm:text-sm ${active === "all" ? "text-ink" : "text-ink2 hover:text-ink"}`}
+    >
+      {d.library.all}
+    </a>
+    {LIBRARY_SECTIONS.map((s, i) => {
+      const isActive = s.key === active;
+      const idx = i + 1;
+      return (
+        <a
+          href={s.zhOnly ? s.href : lp(lang, s.href)}
+          data-lib-track-link
+          data-lib-track-index={idx}
+          aria-pressed={isActive}
+          aria-current={isActive ? "page" : undefined}
+          class={`relative z-10 flex-1 whitespace-nowrap rounded-full py-2 text-center text-[13px] font-medium transition-colors duration-300 sm:text-sm ${isActive ? "text-ink" : "text-ink2 hover:text-ink"}`}
+        >
+          {label(s.key)}
+        </a>
+      );
+    })}
+  </div>
+</nav>
+
+<script>
+  // 点选：胶囊先滑到目标，再跳转；减动效或已在当前页时直接处理。
+  const track = document.querySelector("[data-lib-track]");
+  if (track) {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    track.addEventListener("click", (ev) => {
+      const link = (ev.target as HTMLElement).closest("[data-lib-track-link]") as HTMLAnchorElement | null;
+      if (!link) return;
+      const idx = Number(link.dataset.libTrackIndex || "0");
+      const pressed = link.getAttribute("aria-pressed") === "true";
+      if (pressed || reduceMotion) return; // 已在当前页：不拦截；减动效：直接跳转
+      ev.preventDefault();
+      const el = track as HTMLElement;
+      let capsule = track.querySelector("[data-lib-capsule]") as HTMLElement | null;
+      if (!capsule) {
+        // 没有活动胶囊时现场造一个，再滑过去（兜底；宽按实际槽位数算）。
+        capsule = document.createElement("span");
+        capsule.setAttribute("data-lib-capsule", "");
+        capsule.setAttribute("data-lib-fresh", "1");
+        capsule.setAttribute("aria-hidden", "true");
+        capsule.className = "absolute bottom-1 left-1 top-1 rounded-full bg-white/80 shadow-[0_1px_3px_rgba(0,0,0,0.10)] ring-1 ring-black/[0.05] backdrop-blur-md transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]";
+        const count = track.querySelectorAll("[data-lib-track-link]").length || 9;
+        capsule.style.width = `calc((100% - 8px) / ${count})`;
+        capsule.style.transform = "translateX(0)";
+        track.prepend(capsule);
+      }
+      el.style.setProperty("--track-index", String(idx));
+      const applySlide = () => {
+        if (capsule) capsule.style.transform = `translateX(calc(${idx} * 100%))`;
+      };
+      if (capsule.dataset.libFresh === "1") {
+        // 刚造出来的胶囊：等一帧再滑，否则首绘就定在目标处、看不到滑动。
+        requestAnimationFrame(() => requestAnimationFrame(applySlide));
+      } else {
+        applySlide();
+      }
+      track.querySelectorAll("[data-lib-track-link]").forEach((l) => {
+        l.classList.remove("text-ink");
+        l.classList.add("text-ink2");
+        l.setAttribute("aria-pressed", "false");
+      });
+      link.classList.remove("text-ink2");
+      link.classList.add("text-ink");
+      link.setAttribute("aria-pressed", "true");
+      const href = link.getAttribute("href") || "";
+      setTimeout(() => { window.location.href = href; }, 280);
+    });
+  }
+</script>

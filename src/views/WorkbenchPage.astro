@@ -1,0 +1,67 @@
+---
+import Base from "../layouts/Base.astro";
+import { dict, lp, type Lang } from "../lib/i18n";
+import { effects } from "../lib/content";
+import EffectCard from "../components/EffectCard.astro";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = dict(lang);
+const en = lang === "en";
+const sandboxFx = effects.filter((e) => e.interactive).slice(0, 6);
+const phases = en
+  ? [
+      ["Phase 1 · Now", "The resource library: names, prompts, effects, principles — everything the workbench will assemble from."],
+      ["Phase 2", "Preview sandboxes grow up: apply effects to your own components, tweak parameters, compare platforms side by side."],
+      ["Phase 3", "The assembler: pick components, arrange an early App interaction model in-platform, export it into your own source code and hand it to your AI."],
+    ]
+  : [
+      ["第一期 · 现在", "资源库先行：名字、提示词、效果、原则——工作台将来要拼装的零件先备齐。"],
+      ["第二期", "预览沙盒长大：把效果套到你自己的组件上、拖参数、多端形态并排对比。"],
+      ["第三期", "拼装器：在站内选组件、拼出一个早期 App 交互模型，导出进你自己的源码，交给你的 AI 继续做。"],
+    ];
+---
+
+<Base lang={lang} title={en ? "Workbench" : "工作台"} current="workbench">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10">
+    <p><span class="rounded-full border border-linestrong px-3 py-1 text-sm font-medium">{d.workbench.badge}</span></p>
+    <h1 class="mt-4 text-3xl font-bold tracking-tight">{en ? "The Workbench" : "工作台"}</h1>
+    <p class="mt-3 max-w-2xl leading-relaxed text-ink2">
+      {en
+        ? "The workbench will let you assemble an early App interaction model right here — pick components, apply effects, arrange screens — then export it into your own source code and hand it to your AI. It is deliberately phased: the resource library comes first, because an assembler without good parts assembles nothing worth keeping. There is no editor here yet, and we won't pretend otherwise."
+        : "工作台的目标是让你在站内拼出一个早期 App 交互模型：选组件、套效果、排屏幕，然后导出进你自己的源码，交给你的 AI 继续做。它被有意排在资源库之后——没有好零件的拼装器，拼不出值得留下的东西。这里暂时没有编辑器，我们不会假装它已经存在。"}
+    </p>
+
+    <div class="mt-10 flex flex-col sm:flex-row sm:items-center gap-5 rounded-lg border border-line bg-surface p-5">
+      <img src="/brand/mascot-standing.jpg" alt={en ? "Aglaia, the site mascot" : "吉祥物阿格莱亚"} class="h-36 w-auto self-start rounded-md border border-line sm:self-center" width="750" height="880" />
+      <div>
+        <div class="font-semibold">{en ? "Aglaia · your guide" : "阿格莱亚 · 向导"}</div>
+        <p class="mt-1.5 max-w-xl leading-relaxed text-ink2">
+          {en
+            ? "Start with the sandboxes below — they are live now, and they are the workbench's first parts. The assembler itself is still on its way; when it lands, the effects and components you meet here are the ones you will build with."
+            : "先从下面的沙盒开始——它们现在就能玩，也是工作台的第一批零件。拼装器本体还在路上；等它到了，你在这里遇见的效果和组件，就是你动手拼的时候用的那一批。"}
+        </p>
+      </div>
+    </div>
+
+    <h2 class="mt-12 text-2xl font-bold">{en ? "Preview sandboxes (live now)" : "预览沙盒（现在就能玩）"}</h2>
+    <p class="mt-1.5 max-w-2xl text-ink2">{en ? "These interactive effect previews are the seed of the workbench sandbox: same stage, same parameter model, growing toward full components." : "这些可交互的效果预览就是工作台沙盒的种子：同一个舞台、同一套参数模型，将来长到完整组件。"}</p>
+    <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{sandboxFx.map((e) => <EffectCard lang={lang} item={e} />)}</div>
+    <p class="mt-4"><a class="text-sm font-medium hover:underline underline-offset-4" href={lp(lang, "/effects")}>{en ? "All effects →" : "全部效果 →"}</a></p>
+
+    <h2 class="mt-12 text-2xl font-bold">{en ? "Roadmap" : "路线图"}</h2>
+    <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+      {phases.map(([t, body]) => (
+        <div class="rounded-lg border border-line bg-surface p-5">
+          <div class="font-semibold">{t}</div>
+          <p class="mt-1.5 text-sm leading-relaxed text-ink2">{body}</p>
+        </div>
+      ))}
+    </div>
+    <p class="mt-6 max-w-2xl text-sm leading-relaxed text-muted">
+      {en
+        ? "Community submissions (GitHub PR) open only after the official launch — foundation first. The workbench is part of the free core library."
+        : "社区投稿（GitHub PR）等正式上线后再开放——先打地基。工作台属于永久免费的核心资源库。"}
+    </p>
+  </div>
+</Base>

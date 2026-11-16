@@ -1,0 +1,16 @@
+---
+import type { Item } from "../lib/content";
+import { L2, PLATFORMS, FUNCTIONS, PLACEMENTS, GRANULARITY, type Lang } from "../lib/taxonomy";
+
+interface Props { lang: Lang; item: Item; showFunction?: boolean }
+const { lang, item, showFunction = true } = Astro.props;
+const chips: string[] = [];
+for (const p of item.platforms || []) if (PLATFORMS[p]) chips.push(L2(lang, PLATFORMS[p]));
+if (showFunction && item.function && FUNCTIONS[item.function]) chips.push(L2(lang, FUNCTIONS[item.function]));
+for (const p of (item.placements || []).slice(0, 1)) if (PLACEMENTS[p] && p !== "na") chips.push(L2(lang, PLACEMENTS[p]));
+if (item.granularity && GRANULARITY[item.granularity]) chips.push(L2(lang, GRANULARITY[item.granularity]));
+---
+
+<span class="flex flex-wrap gap-1.5">
+  {chips.map((c) => <span class="rounded-full border border-line bg-subtle px-2 py-0.5 text-xs text-ink2">{c}</span>)}
+</span>

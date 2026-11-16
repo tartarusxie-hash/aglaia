@@ -1,0 +1,125 @@
+---
+import Base from "../layouts/Base.astro";
+import { dict, type Lang } from "../lib/i18n";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = dict(lang);
+const a = d.account;
+// 注意：标题刻意保持中性，页面先请求 /api/auth/me，未登录或非 admin 直接跳回 /account，
+// 不显示任何「无权限」「后台」类提示，不泄露后台存在。
+---
+
+<Base lang={lang} title="Aglaia" noindex current="admin">
+  <div data-pagefind-ignore>
+    <!-- 未确认身份前只显示中性加载态 -->
+    <div id="admin-loading" class="mx-auto max-w-4xl px-4 pt-24 pb-16 text-center sm:px-6">
+      <p class="text-muted">{a.loading}</p>
+    </div>
+
+    <div id="admin-main" class="mx-auto hidden max-w-4xl px-4 pt-12 pb-16 sm:px-6 sm:pt-16">
+      <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">{a.adminTitle}</h1>
+      <p class="mt-3 text-ink2"><span>{a.totalUsers}</span>：<span id="admin-total" class="font-semibold text-ink">–</span></p>
+
+      <div id="admin-error" role="alert" class="mt-6 hidden rounded-md border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"></div>
+      <p id="admin-empty" class="mt-10 hidden text-center text-muted">{a.noUsers}</p>
+
+      <div id="admin-table-wrap" class="mt-6 hidden overflow-x-auto rounded-xl border border-line bg-surface">
+        <table class="w-full min-w-[560px] text-left text-sm">
+          <thead>
+            <tr class="border-b border-line text-muted">
+              <th class="px-4 py-3 font-medium">{a.colNickname}</th>
+              <th class="px-4 py-3 font-medium">{a.colEmail}</th>
+              <th class="px-4 py-3 font-medium">{a.colRole}</th>
+              <th class="px-4 py-3 font-medium">{a.colJoined}</th>
+            </tr>
+          </thead>
+          <tbody id="admin-tbody"></tbody>
+        </table>
+      </div>
+
+      <div id="admin-pager" class="mt-6 hidden items-center justify-between">
+        <button id="admin-prev" type="button" class="rounded-md border border-linestrong px-3.5 py-1.5 text-sm font-medium hover:bg-subtle disabled:opacity-40">{a.prevPage}</button>
+        <span id="admin-pageinfo" class="text-sm text-muted"></span>
+        <button id="admin-next" type="button" class="rounded-md border border-linestrong px-3.5 py-1.5 text-sm font-medium hover:bg-subtle disabled:opacity-40">{a.nextPage}</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { ApiError, getMe, listUsers, formatDate, initialAvatar } from "../lib/account-client";
+    import { dict, lp } from "../lib/i18n";
+
+    const LANG = document.documentElement.lang === "en" ? "en" : "zh";
+    const STR = dict(LANG).account;
+    const ACCOUNT_URL = lp(LANG, "/account");
+
+    const $ = (id) => document.getElementById(id);
+    const LIMIT = 50;
+    let page = 1;
+    let totalPages = 1;
+
+    function esc(s) {
+      return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+    }
+
+    async function loadPage(p) {
+      page = p;
+      const errEl = $("admin-error");
+      errEl.classList.add("hidden");
+      try {
+        const { total, users } = await listUsers(page, LIMIT);
+        $("admin-total").textContent = String(total);
+        totalPages = Math.max(1, Math.ceil(total / LIMIT));
+        const tbody = $("admin-tbody");
+        if (!users.length) {
+          $("admin-empty").classList.remove("hidden");
+          $("admin-table-wrap").classList.add("hidden");
+        } else {
+          $("admin-empty").classList.add("hidden");
+          $("admin-table-wrap").classList.remove("hidden");
+          tbody.innerHTML = users.map((u) => {
+            const avatar = u.avatar_url || initialAvatar(u.nickname);
+            const role = u.role === "admin" ? STR.roleAdmin : STR.roleUser;
+            return `<tr class="border-b border-line last:border-0">
+              <td class="px-4 py-3"><span class="flex items-center gap-3"><img src="${esc(avatar)}" alt="" width="32" height="32" class="h-8 w-8 shrink-0 rounded-full object-cover" /><span class="font-medium">${esc(u.nickname)}</span></span></td>
+              <td class="px-4 py-3 text-ink2">${esc(u.email)}</td>
+              <td class="px-4 py-3"><span class="rounded-full border border-line bg-subtle px-2.5 py-0.5 text-xs">${esc(role)}</span></td>
+              <td class="px-4 py-3 text-ink2">${esc(formatDate(u.created_at, LANG))}</td>
+            </tr>`;
+          }).join("");
+        }
+        const pager = $("admin-pager");
+        if (totalPages > 1) {
+          pager.classList.remove("hidden");
+          pager.classList.add("flex");
+          $("admin-pageinfo").textContent = STR.pageInfo.replace("{p}", String(page)).replace("{n}", String(totalPages));
+          $("admin-prev").disabled = page <= 1;
+          $("admin-next").disabled = page >= totalPages;
+        } else {
+          pager.classList.add("hidden");
+          pager.classList.remove("flex");
+        }
+      } catch (err) {
+        errEl.textContent = STR.errServiceUnavailable;
+        errEl.classList.remove("hidden");
+      }
+    }
+
+    $("admin-prev")?.addEventListener("click", () => { if (page > 1) loadPage(page - 1); });
+    $("admin-next")?.addEventListener("click", () => { if (page < totalPages) loadPage(page + 1); });
+
+    getMe()
+      .then((user) => {
+        // 非 admin：直接跳走，不提示、不泄露
+        if (user.role !== "admin") { location.replace(ACCOUNT_URL); return; }
+        $("admin-loading").classList.add("hidden");
+        $("admin-main").classList.remove("hidden");
+        loadPage(1);
+      })
+      .catch(() => {
+        // 未登录（401）或服务不可用：都直接跳回账号页，不提示
+        location.replace(ACCOUNT_URL);
+      });
+  </script>
+</Base>

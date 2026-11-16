@@ -1,0 +1,55 @@
+---
+// Mobbin 式效果卡：无边框、无阴影，靠留白分隔；统一画幅的演示舞台 + 标题 + 一行极小灰色可点标签。
+// 播放规则不变：默认静止，悬停（或点按）才播放，移开即复位。
+import type { Item } from "../lib/content";
+import { dict, lp, nameOf, type Lang } from "../lib/i18n";
+import { effectHref } from "../lib/links";
+import { INTERACTIVE_EFFECTS, STATIC_EFFECTS } from "../lib/effects-data.mjs";
+
+interface Props { lang: Lang; item: Item }
+const { lang, item } = Astro.props;
+const d = dict(lang);
+const idef = (INTERACTIVE_EFFECTS as any)[item.id];
+const sdef = (STATIC_EFFECTS as any[]).find((s) => s.id === item.id);
+const cardHtml = idef?.cardHtml || sdef?.cardHtml || "";
+const cardCss = idef?.cardCss || sdef?.cardCss || "";
+// 标签取 keywords 前 3 个（跳过 "effect" 这类泛词），点下去是全站搜索。
+const tags = (item.keywords || []).filter((k) => k !== "effect" && k !== item.id).slice(0, 3);
+---
+
+<div class="fx-card group flex flex-col" data-fx-card>
+  <a href={effectHref(lang, item.id)} class="fx-stage relative block aspect-[16/10] cursor-pointer overflow-hidden rounded-lg bg-subtle" data-fx-stage aria-label={nameOf(lang, item)}>
+    <Fragment set:html={cardHtml} />
+    {cardCss && <style set:html={cardCss}></style>}
+    <span class="pointer-events-none absolute bottom-2 right-2 rounded-full bg-ink/70 px-2 py-0.5 text-[11px] text-bg opacity-0 transition-opacity group-hover:opacity-100">{d.effect.hoverHint}</span>
+  </a>
+  <a href={effectHref(lang, item.id)} class="mt-3 flex items-start justify-between gap-2">
+    <span class="font-semibold leading-snug group-hover:underline underline-offset-4">{nameOf(lang, item)}</span>
+    <span class="mt-0.5 shrink-0 rounded-full border border-line px-2 py-0.5 text-[11px] text-ink2">{item.interactive ? d.effect.interactive : d.effect.static}</span>
+  </a>
+  {tags.length > 0 && (
+    <p class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+      {tags.map((t) => (
+        <a href={`${lp(lang, "/search")}?q=${encodeURIComponent(t)}`} class="text-xs text-muted hover:text-ink hover:underline underline-offset-4">{t}</a>
+      ))}
+    </p>
+  )}
+</div>
+
+<script>
+  // 触屏：第一次点按只播放，再点一次才进入详情（规格 §3.3）
+  if (!(window as any).__fxTapBound) {
+    (window as any).__fxTapBound = true;
+    document.addEventListener("click", (ev) => {
+      if (!window.matchMedia("(hover: none)").matches) return;
+      const stage = (ev.target as HTMLElement).closest("[data-fx-stage]");
+      if (!stage) return;
+      const card = stage.closest("[data-fx-card]");
+      if (card && !card.classList.contains("is-playing")) {
+        ev.preventDefault();
+        document.querySelectorAll(".fx-card.is-playing").forEach((c) => c.classList.remove("is-playing"));
+        card.classList.add("is-playing");
+      }
+    });
+  }
+</script>

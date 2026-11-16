@@ -1,0 +1,95 @@
+---
+import Base from "../layouts/Base.astro";
+import { dict, type Lang } from "../lib/i18n";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = dict(lang);
+const en = lang === "en";
+---
+
+<Base lang={lang} title={en ? "Search" : "搜索"} current="">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10">
+    <h1 class="text-3xl font-bold tracking-tight">{en ? "Search" : "搜索"}</h1>
+    <form id="search-form" class="mt-6 flex max-w-xl gap-2" role="search">
+      <input id="search-input" type="search" name="q" placeholder={d.searchPlaceholder} class="w-full rounded-md border border-linestrong bg-surface px-4 py-3 text-base placeholder:text-muted" />
+      <button class="shrink-0 rounded-md bg-primary px-5 py-3 font-semibold text-onprimary hover:opacity-90 transition-opacity">{d.searchBtn}</button>
+    </form>
+
+    <section id="kw-section" class="mt-8 hidden">
+      <h2 class="text-lg font-bold">{en ? "Index matches (name / alias / tags)" : "索引命中（名字 / 别名 / 标签）"}</h2>
+      <div id="kw-results" class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+    </section>
+
+    <section class="mt-8">
+      <h2 class="text-lg font-bold">{en ? "Full-text results" : "全文结果"}</h2>
+      <div id="pagefind-ui" class="mt-3"></div>
+      <p id="pf-note" class="mt-2 text-sm text-muted"></p>
+    </section>
+  </div>
+
+  <link rel="stylesheet" href="/pagefind/pagefind-ui.css" />
+  <script>
+    const LANG = document.documentElement.lang === "en" ? "en" : "zh";
+    const input = document.getElementById("search-input") as HTMLInputElement;
+    const kwSection = document.getElementById("kw-section");
+    const kwResults = document.getElementById("kw-results");
+
+    type KwItem = { id: string; kind: string; name_zh: string; name_en: string; summary_zh: string; description: string; keywords: string[]; path: string };
+    let kwIndex: KwItem[] = [];
+    fetch("/search-index.json").then((r) => r.json()).then((j) => { kwIndex = j; runKw(); }).catch(() => {});
+
+    function esc(s: string) { return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string)); }
+    function runKw() {
+      const q = (input.value || "").trim().toLowerCase();
+      if (!q || !kwResults || !kwSection) { kwSection?.classList.add("hidden"); return; }
+      const terms = q.split(/\s+/).filter(Boolean);
+      const hits = kwIndex.filter((it) => {
+        const hay = [it.name_zh, it.name_en, it.summary_zh, it.description, ...(it.keywords || [])].join(" ").toLowerCase();
+        return terms.every((t) => hay.includes(t));
+      }).slice(0, 12);
+      if (!hits.length) { kwSection.classList.add("hidden"); return; }
+      kwSection.classList.remove("hidden");
+      kwResults.innerHTML = hits.map((it) => {
+        const name = LANG === "en" ? it.name_en : it.name_zh;
+        const sum = LANG === "en" ? it.description : it.summary_zh;
+        const href = (LANG === "en" ? (it.path === "/" ? "/en" : "/en" + it.path) : it.path);
+        return `<a href="${esc(href)}" class="flex flex-col rounded-lg border border-line bg-surface p-4 hover:border-linestrong">
+          <span class="text-[11px] font-semibold text-muted">${esc(it.kind)}</span>
+          <span class="mt-1 font-semibold">${esc(name)}</span>
+          <span class="mt-1 line-clamp-2 text-sm text-ink2" style="color:var(--color-ink-secondary)">${esc(sum)}</span></a>`;
+      }).join("");
+    }
+    input?.addEventListener("input", runKw);
+
+    const q0 = new URLSearchParams(location.search).get("q") || "";
+    if (input && q0) input.value = q0;
+
+    // Pagefind 全文检索（构建后生成 /pagefind/；本地未生成时给出说明）
+    const note = document.getElementById("pf-note");
+    const s = document.createElement("script");
+    s.src = "/pagefind/pagefind-ui.js";
+    s.onload = () => {
+      try {
+        // @ts-ignore
+        new PagefindUI({ element: "#pagefind-ui", showSubResults: true, showImages: false });
+        if (q0) {
+          const pfInput = document.querySelector(".pagefind-ui__search-input") as HTMLInputElement | null;
+          if (pfInput) { pfInput.value = q0; pfInput.dispatchEvent(new Event("input", { bubbles: true })); }
+        }
+      } catch { if (note) note.textContent = LANG === "en" ? "Full-text index unavailable." : "全文索引暂不可用。"; }
+    };
+    s.onerror = () => { if (note) note.textContent = LANG === "en" ? "Full-text index is generated at build time; keyword matches above work immediately." : "全文索引在构建时生成；上方的索引命中可直接用。"; };
+    document.body.appendChild(s);
+
+    document.getElementById("search-form")?.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      const q = input.value.trim();
+      const url = new URL(location.href); if (q) url.searchParams.set("q", q); else url.searchParams.delete("q");
+      history.replaceState(null, "", url);
+      runKw();
+      const pfInput = document.querySelector(".pagefind-ui__search-input") as HTMLInputElement | null;
+      if (pfInput) { pfInput.value = q; pfInput.dispatchEvent(new Event("input", { bubbles: true })); }
+    });
+  </script>
+</Base>

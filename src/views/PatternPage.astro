@@ -1,0 +1,49 @@
+---
+import Base from "../layouts/Base.astro";
+import { dict, lp, nameOf, type Lang } from "../lib/i18n";
+import { entriesOfPattern, get, type Item } from "../lib/content";
+import { FUNCTIONS, L2 } from "../lib/taxonomy";
+import LibraryCard from "../components/LibraryCard.astro";
+import LibraryCrumb from "../components/LibraryCrumb.astro";
+import TagRow from "../components/TagRow.astro";
+
+interface Props { lang: Lang; item: Item }
+const { lang, item } = Astro.props;
+const d = dict(lang);
+const kids = entriesOfPattern(item.id);
+const relatedPatterns = (item.related || []).map((id) => get(id)).filter((x) => x?.kind === "pattern");
+---
+
+<Base lang={lang} title={nameOf(lang, item)} description={item.summary_zh} current="components">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10">
+    <LibraryCrumb lang={lang} section="components" trail={[{ label: lang === "en" ? "Pattern" : "模式" }, { label: nameOf(lang, item) }]} />
+    <h1 class="mt-8 text-3xl font-bold tracking-tight">{nameOf(lang, item)}</h1>
+    <p class="mt-2 text-lg text-ink2">{lang === "en" ? item.name_zh : item.name_en}</p>
+    <div class="mt-4"><TagRow lang={lang} item={item} /></div>
+
+    <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
+      <div class="prose-aglaia max-w-none" set:html={item.html} />
+      <aside class="space-y-4">
+        <div class="rounded-lg border border-line bg-subtle p-4">
+          <div class="text-sm font-semibold">{lang === "en" ? "Definition" : "一句话定义"}</div>
+          <p class="mt-1.5 text-sm leading-relaxed text-ink2">{lang === "en" ? item.definition_en || item.description : item.definition_zh || item.summary_zh}</p>
+          {item.misconceptions_zh && lang !== "en" && (<><div class="mt-4 text-sm font-semibold">常见误区</div><p class="mt-1.5 text-sm leading-relaxed text-ink2">{item.misconceptions_zh}</p></>)}
+          {item.function_group && <p class="mt-4 text-xs text-muted">{lang === "en" ? "Function group" : "功能组"}：{L2(lang, FUNCTIONS[item.function_group] || { zh: item.function_group, en: item.function_group })}</p>}
+        </div>
+        {relatedPatterns.length > 0 && (
+          <div class="rounded-lg border border-line p-4">
+            <div class="text-sm font-semibold">{d.entry.related}</div>
+            <ul class="mt-2 space-y-1.5 text-sm">{relatedPatterns.map((r) => <li><a class="hover:underline underline-offset-4" href={lp(lang, `/components/patterns/${r!.id}`)}>{nameOf(lang, r!)}</a></li>)}</ul>
+          </div>
+        )}
+      </aside>
+    </div>
+
+    <h2 class="mt-12 text-2xl font-bold">{lang === "en" ? "Components in this pattern" : "本站条目"}</h2>
+    {kids.length ? (
+      <div class="mt-4 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">{kids.map((e) => <LibraryCard lang={lang} item={e} />)}</div>
+    ) : (
+      <p class="mt-4 rounded-lg border border-line bg-subtle p-5 text-ink2">{lang === "en" ? "No components filed under this pattern yet — the pattern page itself is the reference for now." : "这个模式下暂未收录站内组件条目，先以本页的定义与误区为参考。"}</p>
+    )}
+  </div>
+</Base>

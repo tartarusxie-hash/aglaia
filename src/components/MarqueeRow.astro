@@ -1,0 +1,141 @@
+---
+// 首页第四页双行跑马灯：组件行（文字卡）与效果行（演示卡），自动慢速滚动、悬停暂停、
+// 触屏点按暂停 4 秒；两行反向（用户 2026-11-15 定：自动滚动）。
+// 卡片内容复制两份，轨道平移 -50% 循环，无缝衔接；每张卡用 margin-right（不用 flex gap），
+// 保证两份宽度严格相等，循环点不跳帧。第二份 aria-hidden + 链接 tabindex -1。
+// 减动效不拦截自动滚动（与第三页轮播同一决定：用户要的就是动）。
+// 效果卡复用 EffectCard 的 fx-card / fx-stage 类名与点按脚本：悬停播、移开停。
+import type { Item } from "../lib/content";
+import { dict, lp, nameOf, summaryOf, type Lang } from "../lib/i18n";
+import { itemHref, effectHref } from "../lib/links";
+import { INTERACTIVE_EFFECTS, STATIC_EFFECTS } from "../lib/effects-data.mjs";
+import { L2, PLATFORMS, FUNCTIONS } from "../lib/taxonomy";
+
+interface Props {
+  lang: Lang;
+  kind: "components" | "effects";
+  items: Item[];
+  reverse?: boolean;
+  duration?: number;
+}
+const { lang, kind, items, reverse = false, duration = 80 } = Astro.props;
+
+function effectDef(id: string) {
+  const idef = (INTERACTIVE_EFFECTS as any)[id];
+  const sdef = (STATIC_EFFECTS as any[]).find((s) => s.id === id);
+  return { html: idef?.cardHtml || sdef?.cardHtml || "", css: idef?.cardCss || sdef?.cardCss || "" };
+}
+
+function compTags(item: Item): string[] {
+  const tags: string[] = [];
+  for (const p of item.platforms || []) if (PLATFORMS[p]) tags.push(L2(lang, PLATFORMS[p]));
+  if (item.function && FUNCTIONS[item.function]) tags.push(L2(lang, FUNCTIONS[item.function]));
+  return tags.slice(0, 3);
+}
+---
+
+<div class="marquee relative overflow-hidden" data-marquee>
+  <div
+    class="marquee-track flex w-max"
+    style={`animation-duration: ${duration}s;${reverse ? " animation-direction: reverse;" : ""}`}
+  >
+    {[0, 1].map((copy) => (
+      <div class="flex" aria-hidden={copy === 1 ? "true" : undefined}>
+        {items.map((item) =>
+          kind === "components" ? (
+            <a
+              href={itemHref(lang, item)}
+              tabindex={copy === 1 ? "-1" : undefined}
+              class="mr-3 flex h-[162px] w-52 shrink-0 flex-col justify-between overflow-hidden rounded-lg border border-line bg-bg p-4 sm:h-[192px] sm:w-64"
+            >
+              <span class="font-semibold leading-snug">{nameOf(lang, item)}</span>
+              <span class="mt-1.5 line-clamp-2 text-sm leading-relaxed text-ink2">{summaryOf(lang, item)}</span>
+              {compTags(item).length > 0 && <span class="mt-2.5 truncate text-xs text-muted">{compTags(item).join(" · ")}</span>}
+            </a>
+          ) : (
+            <div class="fx-card group mr-3 flex w-52 shrink-0 flex-col sm:w-64" data-fx-card>
+              <a
+                href={effectHref(lang, item.id)}
+                tabindex={copy === 1 ? "-1" : undefined}
+                class="fx-stage relative block aspect-[16/10] overflow-hidden rounded-lg bg-subtle"
+                data-fx-stage
+                aria-label={nameOf(lang, item)}
+              >
+                <Fragment set:html={effectDef(item.id).html} />
+                {effectDef(item.id).css && <style set:html={effectDef(item.id).css}></style>}
+              </a>
+              <a
+                href={effectHref(lang, item.id)}
+                tabindex={copy === 1 ? "-1" : undefined}
+                class="mt-2 block truncate font-semibold leading-snug group-hover:underline underline-offset-4"
+              >
+                {nameOf(lang, item)}
+              </a>
+            </div>
+          ),
+        )}
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .marquee-track {
+    animation-name: marquee-scroll;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+  .marquee:hover .marquee-track,
+  .marquee:focus-within .marquee-track,
+  .marquee.is-paused .marquee-track {
+    animation-play-state: paused;
+  }
+  @keyframes marquee-scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+</style>
+
+<script>
+  // 触屏：点按行即暂停，松开 4 秒后恢复（给点进详情留时间）。
+  if (!(window as any).__marqueeTouchBound) {
+    (window as any).__marqueeTouchBound = true;
+    document.querySelectorAll("[data-marquee]").forEach((m) => {
+      let t: number | undefined;
+      m.addEventListener(
+        "touchstart",
+        () => {
+          m.classList.add("is-paused");
+          window.clearTimeout(t);
+        },
+        { passive: true },
+      );
+      m.addEventListener(
+        "touchend",
+        () => {
+          t = window.setTimeout(() => m.classList.remove("is-paused"), 4000);
+        },
+        { passive: true },
+      );
+    });
+  }
+  // 触屏点按效果卡：第一次只播放，再点才进详情（与 EffectCard 同一套，防重复绑定）。
+  if (!(window as any).__fxTapBound) {
+    (window as any).__fxTapBound = true;
+    document.addEventListener("click", (ev) => {
+      if (!window.matchMedia("(hover: none)").matches) return;
+      const stage = (ev.target as HTMLElement).closest("[data-fx-stage]");
+      if (!stage) return;
+      const card = stage.closest("[data-fx-card]");
+      if (card && !card.classList.contains("is-playing")) {
+        ev.preventDefault();
+        document.querySelectorAll(".fx-card.is-playing").forEach((c) => c.classList.remove("is-playing"));
+        card.classList.add("is-playing");
+      }
+    });
+  }
+</script>

@@ -1,0 +1,9 @@
+---
+import PatternPage from "../../../views/PatternPage.astro";
+import { patterns } from "../../../lib/content";
+export function getStaticPaths() {
+  return patterns.map((item) => ({ params: { id: item.id }, props: { item } }));
+}
+const { item } = Astro.props;
+---
+<PatternPage lang="zh" item={item} />

@@ -1,0 +1,46 @@
+---
+import { nameOf, type Lang } from "../lib/i18n";
+import { patterns, entries, entriesOfPattern } from "../lib/content";
+import { lp } from "../lib/i18n";
+import LibraryShell from "../components/LibraryShell.astro";
+import LibraryCard from "../components/LibraryCard.astro";
+import { patternHref } from "../lib/links";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const en = lang === "en";
+// 左侧索引：按模式分组（现有 pattern 字段，一对一归属；7 个暂无条目的模式不列出）。
+const groups = patterns
+  .map((p) => ({ p, n: entriesOfPattern(p.id).length }))
+  .filter(({ n }) => n > 0)
+  .sort((a, b) => nameOf(lang, a.p).localeCompare(nameOf(lang, b.p), lang === "en" ? "en" : "zh"))
+  .map(({ p, n }) => ({
+    key: p.id,
+    label: nameOf(lang, p),
+    count: n,
+    extraHref: patternHref(lang, p.id),
+    extraLabel: en ? "Definition" : "定义",
+  }));
+---
+
+{/* 用户 2026-11-15：简介句（标准名字/所属模式/提示词那套说法）不要；用户 2026-11-16 改让助手写完整说明（为什么设这个分区、收录了什么与多少），见下方 intro。 */}
+{/* 头图：她在左搭积木，标题放右；三角积木右缘实测约 57.5%，标题块限宽 38%（留约 5% 安全距离）。 */}
+<LibraryShell
+  lang={lang}
+  section="components"
+  title={en ? "Components" : "组件"}
+  hero={{ src: "/brand/sections/components-bg.webp", side: "right", maxWidthClass: "sm:max-w-[38%]" }}
+  intro={en
+    ? "Interfaces are built from parts — but most vibecoders can't even name the parts, so AI can't help either. This library fixes that: every component gets a standard name, a look, a usage, and a prompt. 37 components across 25 UI patterns, from navigation and forms to sheets and lists; each one has a live demo card, and inside, a standard definition with its matching prompt."
+    : "界面是由零件搭起来的——但大多数 vibecoder 连零件叫什么都说不清，AI 也就无从下手。组件库就是为了解决这个问题：先给每个零件一个标准名字，再给它长相、用法和提示词。这里收录 37 个组件，分属 25 种界面模式，从导航、表单到弹窗、列表全都有；每个组件都有一张会动的演示卡，点开还有标准定义与配套提示词。"}
+  groups={groups}
+  total={entries.length}
+>
+  <div class="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    {entries.map((e) => (
+      <div data-lib-item data-lib-cat={e.pattern || ""}>
+        <LibraryCard lang={lang} item={e} />
+      </div>
+    ))}
+  </div>
+</LibraryShell>

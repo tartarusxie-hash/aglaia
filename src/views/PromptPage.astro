@@ -1,0 +1,187 @@
+---
+import Base from "../layouts/Base.astro";
+import { dict, nameOf, type Lang} from "../lib/i18n";
+import { get, type Item} from "../lib/content";
+import LibraryCrumb from "../components/LibraryCrumb.astro";
+import TagRow from "../components/TagRow.astro";
+import { entryHref, effectHref, promptHref} from "../lib/links";
+import tokensJson from "../../tokens/tokens.json";
+
+interface Props { lang: Lang; item: Item}
+const { lang, item} = Astro.props;
+const d = dict(lang);
+const isScene = item.kind === "scene" || item.level === "scene";
+const linkedEntry = item.entry? get(item.entry): undefined;
+const linkedEffect = item.effect? get(item.effect): undefined;
+const v = item.verification;
+const verified = Boolean(v && (v.last_verified_model || v.last_verified_date || v.result));
+const params = (item.parameters || []).map((p) => {
+const opts = p.type === "enum" && p.range? p.range.split("/").map((s) => s.trim()).filter(Boolean): null;
+return {...p, options: opts && opts.length > 1? opts: null};
+});
+
+// 令牌解析：{{token:color/primary}} → tokens.json 实际值（含别名链）
+const T: any = tokensJson as any;
+function resolveToken(path: string): string {
+const parts = path.replace(/\//g, ".").split(".");
+let node: any = T;
+for (const part of parts) node = node?.[part];
+// 组节点（如 color/ink）本身没有 $value：退到该组的 primary 子项。
+// 注意：旧逻辑在 node 为 null 时补 "/primary"，会把不存在的
+// color/ink-secondary 拼成 color/ink-secondary/primary 再原样漏出，已删掉。
+if (node != null && node.$value == null && node.primary != null) {
+return resolveToken(path + "/primary");
+}
+let val = node?.$value;
+let guard = 0;
+while (typeof val === "string" && val.startsWith("{") && guard++ < 5) {
+const ref = val.slice(1, -1).split(".");
+let n: any = T;
+for (const part of ref) n = n?.[part];
+val = n?.$value;
+}
+if (val == null) return `{{token:${path}}}`;
+if (Array.isArray(val)) return path.includes("easing")? `cubic-bezier(${val.join(", ")})`: val.join(", ");
+if (typeof val === "object") return val.value!= null? `${val.value}${val.unit || ""}`: JSON.stringify(val);
+return String(val);
+}
+const tokenRefs = [...new Set([...(item.bodyMd.matchAll(/\{\{token:([^}]+)\}\}/g))].map((m) => m[1]))];
+const tokenMap = Object.fromEntries(tokenRefs.map((r) => [r, resolveToken(r)]));
+
+// 原文（item.html）与拼装正文（payload.body）是 Markdown 直出的内容，
+// 从不走令牌替换，占位符会原样漏到页面文字里。
+// 这里在服务端先把占位符替换成解析后的值；拼装脚本里的 tokenMap 循环随即为空操作、留作兜底。
+const resolveInText = (text: string) =>
+  tokenRefs.reduce((t, r) => t.split(`{{token:${r}}}`).join(tokenMap[r]), text);
+const resolvedBody = resolveInText(item.bodyMd);
+const resolvedHtml = resolveInText(item.html);
+
+const payload = {
+body: resolvedBody,
+params: params.map((p) => ({ name: p.name, def: String(p.default?? "")})),
+tokenMap,
+};
+const payloadJson = JSON.stringify(payload).replace(/<\//g, "<\\/");
+const refs = (item.refs || []).map((r) => ({...r, item: get(r.prompt)}));
+---
+
+<Base lang={lang} title={nameOf(lang, item)} description={item.summary_zh} current="prompts">
+<div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10">
+<LibraryCrumb lang={lang} section="prompts" trail={[{ label: isScene? d.misc.sceneLevel: d.misc.componentLevel }, { label: nameOf(lang, item) }]} />
+<h1 class="mt-8 text-3xl font-bold tracking-tight">{nameOf(lang, item)}</h1>
+<p class="mt-2 max-w-2xl leading-relaxed text-ink2">{lang === "en"? item.description: item.summary_zh}</p>
+<div class="mt-4 flex flex-wrap items-center gap-3">
+<TagRow lang={lang} item={item} />
+<span class="text-sm text-muted">{d.prompt.version} v{item.version || "1.0.0"} · {d.prompt.targets}：{(item.targets || []).join(" / ")}</span>
+{item.status === "stale" && <span class="rounded border border-linestrong px-2 py-0.5 text-xs">{d.misc.stale}</span>}
+</div>
+{linkedEntry && <p class="mt-3 text-sm">{d.prompt.linkedEntry}：<a class="font-medium hover:underline underline-offset-4" href={entryHref(lang, linkedEntry.id)}>{nameOf(lang, linkedEntry)}</a></p>}
+{linkedEffect && <p class="mt-3 text-sm">{d.prompt.linkedEffect}：<a class="font-medium hover:underline underline-offset-4" href={effectHref(lang, linkedEffect.id)}>{nameOf(lang, linkedEffect)}</a></p>}
+
+{isScene && refs.length > 0 && (
+<section class="mt-8 max-w-3xl">
+<h2 class="text-xl font-bold">{d.prompt.refsTitle}</h2>
+<ul class="mt-3 space-y-2">
+{refs.map((r) => (
+<li class="rounded-lg border border-line bg-surface px-4 py-3">
+{r.item? <a class="font-medium hover:underline underline-offset-4" href={promptHref(lang, r.item.id)}>{nameOf(lang, r.item)}</a>: <span class="font-mono text-sm">{r.prompt}</span>}
+<span class="ml-2 text-sm text-muted">v{r.version}</span>
+{r.overrides && Object.keys(r.overrides).length > 0 && (
+<span class="mt-1 block text-sm text-ink2">{Object.entries(r.overrides).map(([k, val]) => `${k} = ${val}`).join("；")}</span>
+)}
+</li>
+))}
+</ul>
+{item.layout_zh && lang!== "en" && (<><h3 class="mt-6 font-bold">{d.prompt.layoutTitle}</h3><p class="mt-1.5 leading-relaxed text-ink2">{item.layout_zh}</p></>)}
+</section>
+)}
+
+<section class="mt-10 grid gap-8 lg:grid-cols-[340px_1fr]">
+<div>
+<h2 class="text-xl font-bold">{d.prompt.fillTitle}</h2>
+{params.length? (
+<div class="mt-4 space-y-3" id="fill-form">
+{params.map((p) => (
+<label class="block">
+<span class="text-sm font-medium">{p.name} <span class="font-normal text-muted">· {p.type}{p.range? ` · ${p.range}`: ""}{p.unit? ` · ${p.unit}`: ""}</span></span>
+{p.options? (
+<select data-param={p.name} class="mt-1 w-full rounded-md border border-linestrong bg-surface px-3 py-2 text-sm">
+{p.options.map((o) => <option value={o} selected={o === String(p.default)}>{o}</option>)}
+</select>
+): (
+<input data-param={p.name} type="text" value={String(p.default?? "")} class="mt-1 w-full rounded-md border border-linestrong bg-surface px-3 py-2 text-sm" />
+)}
+</label>
+))}
+</div>
+): (
+<p class="mt-3 text-sm leading-relaxed text-ink2">{lang === "en"? "This prompt has no fill-in parameters — copy it as is, and replace the bracketed placeholders in the text.": "这条提示词没有参数表：直接复制全文，把文中的占位符换成你的内容。"}</p>
+)}
+{tokenRefs.length > 0 && (
+<div class="mt-5 rounded-lg border border-line bg-subtle p-3.5">
+<div class="text-sm font-semibold">{lang === "en"? "Tokens resolve to": "令牌将替换为本站 TokenSet 的值"}</div>
+<ul class="mt-2 space-y-1 font-mono text-xs text-ink2">
+{tokenRefs.map((r) => <li>{r} → {tokenMap[r]}</li>)}
+</ul>
+</div>
+)}
+<div class="mt-5 rounded-lg border border-line p-4">
+<div class="text-sm font-semibold">{d.prompt.verification}</div>
+{verified? (
+<dl class="mt-2 space-y-1 text-sm text-ink2">
+<div>{d.prompt.verifiedModel}：{v!.last_verified_model || "—"}</div>
+<div>{d.prompt.verifiedDate}：{v!.last_verified_date || "—"}</div>
+<div>{d.prompt.verifiedBy}：{v!.verified_by || "—"}</div>
+<div>{d.prompt.verifiedResult}：{(d.prompt.resultMap as any)[v!.result] || v!.result || "—"}</div>
+</dl>
+): (
+<p class="mt-2 text-sm leading-relaxed text-ink2">{d.prompt.unverified}</p>
+)}
+</div>
+</div>
+
+<div>
+<div class="flex items-center justify-between gap-3">
+<h2 class="text-xl font-bold">{d.prompt.assembled}</h2>
+<button id="copy-btn" class="shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-onprimary hover:opacity-90 transition-opacity">{d.prompt.copyFull}</button>
+</div>
+<pre id="assembled" class="mt-3 max-h-[560px] overflow-auto whitespace-pre-wrap rounded-lg border border-line bg-surface p-4 font-mono text-[13px] leading-relaxed"></pre>
+<h3 class="mt-8 font-bold">{d.prompt.original}</h3>
+<div class="prose-aglaia mt-2 max-w-none" set:html={resolvedHtml} />
+</div>
+</section>
+</div>
+
+<script type="application/json" id="prompt-data" set:html={payloadJson}></script>
+<script>
+const data = JSON.parse(document.getElementById("prompt-data")?.textContent || "{}");
+const out = document.getElementById("assembled");
+function assemble() {
+// 正文里的令牌已在服务端解析（payload.body 是解析后的文本），
+// 这里只做参数替换；旧的 tokenMap 循环已随服务端解析一并退役。
+let text: string = data.body || "";
+const values: Record<string, string> = {};
+document.querySelectorAll("[data-param]").forEach((el) => {
+const input = el as HTMLInputElement;
+values[input.dataset.param || ""] = input.value;
+});
+for (const p of data.params || []) {
+const val = values[p.name] || p.def || p.name;
+text = text.split(p.name).join(val);
+}
+if (out) out.textContent = text;
+}
+document.querySelectorAll("[data-param]").forEach((el) => el.addEventListener("input", assemble));
+document.querySelectorAll("[data-param]").forEach((el) => el.addEventListener("change", assemble));
+assemble();
+const btn = document.getElementById("copy-btn");
+btn?.addEventListener("click", async () => {
+try {
+await navigator.clipboard.writeText(out?.textContent || "");
+const old = btn.textContent;
+btn.textContent = "✓";
+setTimeout(() => (btn.textContent = old), 1600);
+} catch { /* clipboard unavailable */}
+});
+</script>
+</Base>

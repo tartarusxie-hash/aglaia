@@ -1,0 +1,53 @@
+---
+import Base from "../layouts/Base.astro";
+import { dict, nameOf, type Lang } from "../lib/i18n";
+import { principles, type Item } from "../lib/content";
+import { PRINCIPLE_GROUPS, L2 } from "../lib/taxonomy";
+import LibraryCrumb from "../components/LibraryCrumb.astro";
+
+interface Props { lang: Lang; item?: Item; mode: "discipline" | "checklist" }
+const { lang, item, mode } = Astro.props;
+const d = dict(lang);
+---
+
+{mode === "discipline" && item ? (
+  <Base lang={lang} title={nameOf(lang, item)} description={item.summary_zh} current="learn">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10">
+      <LibraryCrumb lang={lang} section="learn" trail={[{ label: d.learn.disciplines }, { label: nameOf(lang, item) }]} />
+      <h1 class="mt-8 text-3xl font-bold tracking-tight">{nameOf(lang, item)}</h1>
+      <p class="mt-2 text-lg text-ink2">{lang === "en" ? item.name_zh : item.name_en}</p>
+      {lang === "en" && <p class="mt-3 inline-block rounded-md border border-line bg-subtle px-3 py-1.5 text-sm text-ink2">{d.learn.enPending}</p>}
+      <div class="prose-aglaia mt-6 max-w-3xl" set:html={item.html} />
+    </div>
+  </Base>
+) : mode === "checklist" && item ? (
+  <Base lang={lang} title={nameOf(lang, item)} description={item.summary_zh} current="learn">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10">
+      <LibraryCrumb lang={lang} section="learn" trail={[{ label: d.learn.checklist }, { label: nameOf(lang, item) }]} />
+      <h1 class="mt-8 text-3xl font-bold tracking-tight">{nameOf(lang, item)}</h1>
+      {lang === "en" && <p class="mt-3 inline-block rounded-md border border-line bg-subtle px-3 py-1.5 text-sm text-ink2">{d.learn.enPending}</p>}
+      <div class="prose-aglaia mt-6 max-w-3xl" set:html={item.html} />
+    </div>
+  </Base>
+) : (
+  <Base lang={lang} title={lang === "en" ? "Principles" : "原则速查"} current="learn">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10">
+      <LibraryCrumb lang={lang} section="learn" trail={[{ label: d.learn.principles }]} />
+      <h1 class="mt-8 text-3xl font-bold tracking-tight">{d.learn.principles}</h1>
+      <p class="mt-2 max-w-2xl leading-relaxed text-ink2">{lang === "en" ? "Twenty-seven principles worth knowing by name — each with a one-line takeaway and where to apply it." : "27 条值得记住名字的原则：每条一句要点、一个应用场景。"}</p>
+      {Object.entries(PRINCIPLE_GROUPS).map(([g, label]) => (
+        <section class="mt-10">
+          <h2 class="text-xl font-bold">{L2(lang, label)} <span class="text-sm font-normal text-muted">· {principles.filter((p) => p.group === g).length}</span></h2>
+          <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {principles.filter((p) => p.group === g).map((p) => (
+              <article id={p.id} class="rounded-lg border border-line bg-surface p-4">
+                <div class="font-semibold">{nameOf(lang, p)}</div>
+                <div class="prose-aglaia mt-1 text-sm" set:html={p.html} />
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  </Base>
+)}

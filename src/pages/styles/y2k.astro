@@ -1,0 +1,133 @@
+---
+import StylePage from "../../views/StylePage.astro";
+
+// Y2K 美学条目 v0.1（2026-11-13）。正文见 workspace/goals/figma/entries/y2k-2026-11-13.md。
+// 由合篇《关联数字风格》拆分而来，用户 2026-11-13 决定拆五篇。
+const style = {
+  id: "y2k",
+  nameZh: "Y2K 美学",
+  nameEn: "Y2K Aesthetic",
+  years: "约 1997–2004（2020 年代复兴）",
+  origin: "千禧年消费文化",
+  definition: "Y2K 美学是千禧年科技乐观主义的视觉化身：液态铬、半透明糖果塑料、全息渐变与星星闪光。",
+  definitionEn: "Y2K aesthetic is the visual embodiment of millennial techno-optimism: liquid chrome, translucent candy plastic, holographic gradients and star sparkles.",
+  intro: [
+    "Y2K 美学（原时代约 1997–2004 年，2020 年代复兴）与 Frutiger Aero（约 2004–2013 年）是 2000 年代的两次\"乐观科技\"浪潮：前者是液态铬、半透明糖果塑料、全息渐变与星星闪光，后者是水滴、气泡、蓝天绿草与玻璃光泽——科技与自然和解的乐观主义。两者都被 2013 年的扁平化终结，又都在 2020 年代作为怀旧美学复兴。",
+    "Y2K 的乐观来自千禧年的转折点：互联网刚刚走进千家万户，未来看起来闪亮、圆润、触手可及。半透明的糖果塑料机身、液态金属般的大字、全息渐变的光泽——科技不再是灰色的办公机器，而是一件可以握在手里的玩具。名字是事后取的：2016 年，消费者美学研究所（CARI）的埃文·柯林斯系统地定义并普及了\"Y2K 美学\"一词，指的正是这段约 1997–2004 年的未来主义设计风格。",
+    "今天的 Y2K 更多是氛围而非组件规范：它适合海报、活动页、品牌视觉与怀旧营销，不适合需要建立可信度的页面。作为时代美学，它与扁平化之后的\"深度回归\"（质感设计、玻璃拟态、黏土拟态）同源，都在回答屏幕上的深度与材质怎么做——只是 Y2K 用铬与全息回答，而它们用纸片、玻璃与黏土回答。",
+  ],
+  promptZh: "用 Y2K 美学做一张复古科技海报：液态铬大字、全息渐变、气泡形状与星星闪光，千禧年的乐观与闪亮。",
+  promptEn: "Design a retro-tech poster in Y2K aesthetic: liquid-chrome headline type, holographic gradients, bubble shapes and star sparkles — millennial optimism, glossy and bright.",
+  variants: [
+    {
+      label: "产品",
+      zh: "用 Y2K 美学做一个运动手表 App 的首页：液态铬大数字、气泡形按钮、全息渐变背景、星星闪光点缀，闪亮、活泼、像千禧年的未来。",
+      en: "Design a sports watch app home screen in Y2K aesthetic: liquid-chrome numerals, bubble-shaped buttons, a holographic gradient background, star sparkles — glossy, playful, like the millennial future.",
+    },
+    {
+      label: "品牌",
+      zh: "用 Y2K 美学设计一个能量饮料的品牌视觉：铬银 logo、热粉点缀、半透明糖果塑料质感的瓶身、星星闪光，千禧年的能量与闪亮。",
+      en: "Design an energy drink brand identity in Y2K aesthetic: a chrome-silver logo, hot-pink accents, translucent candy-plastic bottle texture, star sparkles — millennial energy, glossy and bright.",
+    },
+    {
+      label: "网页",
+      zh: "用 Y2K 美学做一个千禧年主题派对的活动页：居中对称布局、气泡字标题、液态铬字、全息渐变背景，闪亮、欢快、充满 2000 年的味道。",
+      en: "Build a millennium-themed party landing page in Y2K aesthetic: centered symmetrical layout, bubbly headline type, liquid-chrome lettering, holographic gradient background — glossy, joyful, full of 2000s flavor.",
+    },
+  ],
+  palette: [
+    { hex: "#C9CDD3", name: "Y2K 铬银", role: "金属渐变起色" },
+    { hex: "#7E838C", name: "铬深灰", role: "金属渐变终色" },
+    { hex: "#FF4FA3", name: "Y2K 热粉", role: "点缀" },
+    { hex: "#A78BFA", name: "全息紫", role: "全息渐变" },
+    { hex: "#7DD3FC", name: "糖果蓝", role: "半透明糖果塑料" },
+    { hex: "#F8FAFC", name: "星光白", role: "星星闪光与高光" },
+  ],
+  typography: "Eurostile 等未来感无衬线为风格参考（商业字体），开源替代 Orbitron（OFL）或 Michroma（OFL）。Eurostile 为商业字体，只作参考，不直接用。",
+  composition: ["居中对称、气泡字标题", "大字居中，星星与气泡环绕"],
+  forms: "液态铬字、气泡、星星；圆润膨胀的泡泡形、液态金属曲线。",
+  texture: "液态铬、全息渐变、糖果塑料；星星闪光、CD 光盘彩虹光泽。",
+  donts: ["Y2K 不用在需要可信度的页面（银行、医疗）", "铬与全息不用满屏堆叠（留白给闪光呼吸）", "不用在需要克制、严肃的场景"],
+  gallery: [
+    {
+      title: "Y2K 美学",
+      artist: "时代风格",
+      year: "约 1997–2004（2020 年代复兴）",
+      status: "版权期",
+      note: "看：液态铬、糖果塑料、全息渐变与星星闪光；千禧年科技乐观主义的视觉化身。当代作品均在版权期。",
+      link: "https://en.wikipedia.org/wiki/Y2K_aesthetic",
+      linkLabel: "查看介绍（Wikipedia）↗",
+    },
+    {
+      title: "iMac G3",
+      artist: "苹果",
+      year: "1998",
+      status: "版权期",
+      note: "看：半透明糖果塑料的代表作——泪滴形半透明机身、邦迪蓝；设计团队从彩色糖果机获得灵感，半透明塑料随后席卷消费电子。",
+      link: "https://en.wikipedia.org/wiki/IMac_G3",
+      linkLabel: "查看介绍（Wikipedia）↗",
+    },
+    {
+      title: "iPod（初代）",
+      artist: "苹果",
+      year: "2001",
+      status: "版权期",
+      note: "看：千禧年科技乐观主义的随身化身——白色机身、机械滚轮、\"1,000 songs in your pocket\"；2001 年 10 月 23 日发布。",
+      link: "https://en.wikipedia.org/wiki/IPod_Classic",
+      linkLabel: "查看介绍（Wikipedia）↗",
+    },
+    {
+      title: "消费者美学研究所 CARI",
+      artist: "埃文·柯林斯",
+      year: "2014—",
+      status: "版权期",
+      note: "看：Y2K 美学的命名与整理者——埃文·柯林斯 2014 年在 vaporwave 社区贴出拼贴、整理约 900 例图集，2016 年系统定义\"Y2K 美学\"；也是 Frutiger Aero 等命名的源头。",
+      link: "https://en.wikipedia.org/wiki/Consumer_Aesthetics_Research_Institute",
+      linkLabel: "查看介绍（Wikipedia）↗",
+    },
+    {
+      title: "Y2K 平面设计复兴",
+      artist: "Made Good Designs",
+      year: "2020 年代",
+      status: "版权期",
+      note: "看：复兴的视角——2020–2021 年起 Gen Z 在 TikTok 上重新发现铬质感与气泡字；文章梳理了 Y2K 平面设计的视觉语言、消失与回归。",
+      link: "https://madegooddesigns.com/y2k-graphic-design/",
+      linkLabel: "查看文章（Made Good Designs）↗",
+    },
+  ],
+  timeline: [
+    { year: "约 1997–2004", text: "Y2K 美学原时代：液态铬、糖果塑料、全息渐变；千禧年科技乐观主义。" },
+    { year: "1998", text: "iMac G3 发布（8 月 15 日）：半透明糖果塑料成为时代的标志性材质。" },
+    { year: "2001", text: "初代 iPod 发布（10 月 23 日）：千禧年科技乐观主义走进口袋。" },
+    { year: "2013", text: "扁平化终结了它（与 Frutiger Aero 一起）：铬、光泽与拟物被扁平取代。" },
+    { year: "2014", text: "埃文·柯林斯在 vaporwave 社区贴出 Y2K 拼贴，10 月整理约 900 例图集；CARI 由此起步。" },
+    { year: "2016", text: "柯林斯系统定义并普及\"Y2K 美学\"一词（原指约 1997–2004 年的未来主义设计风格）。" },
+    { year: "2020–2021", text: "复兴：Gen Z 在 TikTok 上重新发现 Y2K，铬质感、气泡字与糖果色回归。" },
+  ],
+  figures: [
+    { name: "埃文·柯林斯", note: "消费者美学研究所（CARI）创始人，Y2K 美学的命名与整理者。" },
+  ],
+  influence: "Y2K → Frutiger Aero 是 2000 年代的两次乐观浪潮；扁平化（2013）打断了它们；2020 年代两者作为怀旧美学先后复兴——Y2K 先行，Frutiger Aero 随后（2023 年）。Y2K 的复兴也分化了词义：原指的未来主义设计风格（今多称 Y2K Futurism）与更宽泛的 2000 年代时尚复兴（McBling 等）共用一个名字，使用时需分辨。今天的 Y2K 更多是氛围语言：它不提供组件规范，但为海报、品牌与活动页提供一套现成的闪亮词汇。",
+  relatedStyles: [
+    { name: "Frutiger Aero", note: "同属 2000 年代的两次\"乐观科技\"浪潮，Y2K 的继任者", href: "/styles/frutiger-aero/" },
+    { name: "孟菲斯", note: "Y2K 之前的撞色狂欢", href: "/styles/memphis/" },
+    { name: "波普艺术", note: "大众消费文化的视觉先声", href: "/styles/pop-art/" },
+    { name: "拟物化", note: "Y2K 的材质源头之一", href: "/styles/skeuomorphism/" },
+    { name: "扁平化设计", note: "2013 年终结 Y2K 的转折点", href: "/styles/flat-design/" },
+  ],
+  relatedComponents: [
+    { name: "英雄区", note: "Y2K 全幅氛围：液态铬大字 + 全息渐变", href: "/components/entries/hero-section/" },
+    { name: "商品卡片", note: "糖果塑料质感的商品展示", href: "/components/entries/product-card/" },
+    { name: "基础卡片", note: "气泡形卡片、星星点缀", href: "/components/entries/card-basic/" },
+    { name: "底部抽屉", note: "全息渐变面板", href: "/components/entries/bottom-sheet/" },
+    { name: "移动端底部导航", note: "气泡按钮式导航", href: "/components/entries/mobile-tab-bar/" },
+  ],
+  keywords: ["Y2K", "千禧年", "液态铬", "糖果塑料", "全息渐变", "星星闪光", "复古科技", "怀旧美学"],
+  imageBg: "/brand/styles/y2k-bg.webp",
+  imageAlt: "阿格莱亚身着 Y2K 美学风格：液态铬圆环、全息气泡与星星闪光",
+  heroTone: "dark",
+  footerNote: "草稿。原时代起止年取报告口径约 1997–2004，另有约 1998–2004 的说法；\"2016 年柯林斯系统定义\"一说未打开 CARI 原站核对；画廊第 5 件为设计博客文章，可替换为更权威的复兴报道。英文全文翻译后补。",
+};
+---
+
+<StylePage lang="zh" style={style} />

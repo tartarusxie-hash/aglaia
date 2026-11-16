@@ -1,0 +1,237 @@
+---
+import Base from "../layouts/Base.astro";
+import AvatarPicker from "../components/AvatarPicker.astro";
+import { dict, lp, type Lang } from "../lib/i18n";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = dict(lang);
+const a = d.account;
+const en = lang === "en";
+const accountHref = lp(lang, "/account");
+const inputCls = "w-full rounded-md border border-linestrong bg-surface px-3.5 py-2.5 text-[15px] placeholder:text-muted";
+const labelCls = "mb-1.5 block text-sm font-medium";
+const errCls = "mt-1 hidden text-sm text-red-600";
+const okCls = "mt-3 hidden text-sm font-medium text-ink";
+const btnCls = "rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-onprimary transition-opacity hover:opacity-90 disabled:opacity-50";
+---
+
+<Base lang={lang} title={a.settingsTitle} description={en ? "Manage your Aglaia account: nickname, bio, avatar and password." : "管理你的阿格莱亚账号：昵称、简介、头像与密码。"} current="account">
+  <div id="settings-loading" class="mx-auto max-w-xl px-4 pt-24 pb-16 text-center sm:px-6">
+    <p class="text-muted">{a.loading}</p>
+  </div>
+
+  <!-- 服务不可用：无法确认登录状态时只显示提示，不跳转、不报错崩溃 -->
+  <div id="settings-unavailable" class="mx-auto hidden max-w-xl px-4 pt-24 pb-16 text-center sm:px-6">
+    <p class="text-muted">{a.errServiceUnavailable}</p>
+    <p class="mt-6"><a href={accountHref} class="underline underline-offset-4 hover:text-ink2">{a.backToProfile}</a></p>
+  </div>
+
+  <div id="settings-main" class="mx-auto hidden max-w-xl px-4 pt-12 pb-16 sm:px-6 sm:pt-16">
+    <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">{a.settingsTitle}</h1>
+    <p class="mt-3"><a href={accountHref} class="text-sm text-ink2 underline underline-offset-4 hover:text-ink">← {a.backToProfile}</a></p>
+
+    <!-- 资料：昵称 + 简介 -->
+    <section class="mt-8 rounded-xl border border-line bg-surface p-6">
+      <h2 class="text-lg font-semibold">{a.profileSection}</h2>
+      <form id="form-profile" class="mt-5 space-y-5" novalidate>
+        <div>
+          <label for="set-nickname" class={labelCls}>{a.nickname}</label>
+          <input id="set-nickname" name="nickname" type="text" maxlength="20" class={inputCls} />
+          <p id="set-nickname-err" class={errCls}></p>
+        </div>
+        <div>
+          <label for="set-bio" class={labelCls}>{a.bio}</label>
+          <textarea id="set-bio" name="bio" rows="3" placeholder={a.bioPlaceholder} class={`${inputCls} resize-y leading-relaxed`}></textarea>
+        </div>
+        <button id="profile-submit" type="submit" class={btnCls}>{a.saveProfile}</button>
+        <p id="profile-ok" class={okCls}>✓ {a.saved}</p>
+      </form>
+    </section>
+
+    <!-- 头像：40 预设 + 上传 -->
+    <section class="mt-6 rounded-xl border border-line bg-surface p-6">
+      <h2 class="text-lg font-semibold">{a.avatarSection}</h2>
+      <div class="mt-5">
+        <AvatarPicker lang={lang} prefix="set" />
+        <p id="set-avatar-err" class={errCls}></p>
+        <button id="avatar-submit" type="button" class={`${btnCls} mt-5`}>{a.saveAvatar}</button>
+        <p id="avatar-ok" class={okCls}>✓ {a.saved}</p>
+      </div>
+    </section>
+
+    <!-- 密码 -->
+    <section class="mt-6 rounded-xl border border-line bg-surface p-6">
+      <h2 class="text-lg font-semibold">{a.passwordSection}</h2>
+      <form id="form-password" class="mt-5 space-y-5" novalidate>
+        <div>
+          <label for="set-current-password" class={labelCls}>{a.currentPassword}</label>
+          <input id="set-current-password" name="current_password" type="password" autocomplete="current-password" class={inputCls} />
+          <p id="set-current-password-err" class={errCls}></p>
+        </div>
+        <div>
+          <label for="set-new-password" class={labelCls}>{a.newPassword}</label>
+          <input id="set-new-password" name="new_password" type="password" autocomplete="new-password" placeholder={a.newPasswordPlaceholder} class={inputCls} />
+          <p id="set-new-password-err" class={errCls}></p>
+        </div>
+        <div>
+          <label for="set-new-password-confirm" class={labelCls}>{a.newPasswordConfirm}</label>
+          <input id="set-new-password-confirm" name="new_password_confirm" type="password" autocomplete="new-password" class={inputCls} />
+          <p id="set-new-password-confirm-err" class={errCls}></p>
+        </div>
+        <button id="password-submit" type="submit" class={btnCls}>{a.changePasswordBtn}</button>
+        <p id="password-ok" class={okCls}>✓ {a.passwordChanged}</p>
+        <p id="password-err" class={errCls}></p>
+      </form>
+    </section>
+
+    <div class="mt-8 text-center">
+      <button id="settings-logout" type="button" class="text-sm text-ink2 underline underline-offset-4 hover:text-ink">{a.logout}</button>
+    </div>
+  </div>
+
+  <script>
+    import { ApiError, getMe, logout, updateProfile, setAvatarPreset, uploadAvatar, changePassword, notifyAuthChanged } from "../lib/account-client";
+    import { initAvatarPicker } from "../lib/avatar-picker";
+    import { presetIdFromUrl } from "../lib/avatars.mjs";
+    import { dict, lp } from "../lib/i18n";
+
+    const LANG = document.documentElement.lang === "en" ? "en" : "zh";
+    const STR = dict(LANG).account;
+    const ACCOUNT_URL = lp(LANG, "/account");
+
+    const $ = (id) => document.getElementById(id);
+    const loadingEl = $("settings-loading");
+    const mainEl = $("settings-main");
+    const unavailableEl = $("settings-unavailable");
+
+    const picker = initAvatarPicker(document.querySelector("[data-avatar-picker]"), {
+      onError: (kind) => setErr("set-avatar-err", kind === "size" ? STR.errAvatarSize : STR.errAvatarType),
+    });
+
+    function setErr(id, msg) {
+      const el = $(id);
+      if (!el) return;
+      if (msg) { el.textContent = msg; el.classList.remove("hidden"); }
+      else { el.textContent = ""; el.classList.add("hidden"); }
+    }
+    function flashOk(id) {
+      const el = $(id);
+      if (!el) return;
+      el.classList.remove("hidden");
+      setTimeout(() => el.classList.add("hidden"), 4000);
+    }
+
+    let currentUser = null;
+
+    getMe()
+      .then((user) => {
+        currentUser = user;
+        $("set-nickname").value = user.nickname || "";
+        $("set-bio").value = user.bio || "";
+        const presetId = presetIdFromUrl(user.avatar_url);
+        if (presetId) picker.setPreset(presetId);
+        else if (user.avatar_url && user.avatar_url.startsWith("data:")) picker.setCustomPreview(user.avatar_url);
+        loadingEl.classList.add("hidden");
+        mainEl.classList.remove("hidden");
+      })
+      .catch((err) => {
+        loadingEl.classList.add("hidden");
+        if (err instanceof ApiError && err.status === 401) {
+          // 未登录：回账号页登录
+          location.replace(ACCOUNT_URL);
+        } else {
+          unavailableEl.classList.remove("hidden");
+        }
+      });
+
+    // 保存资料
+    $("form-profile")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nickname = $("set-nickname").value.trim();
+      const bio = $("set-bio").value.trim();
+      if (!nickname || nickname.length > 20) { setErr("set-nickname-err", STR.errNickname); return; }
+      setErr("set-nickname-err", "");
+      const btn = $("profile-submit");
+      btn.disabled = true;
+      btn.textContent = STR.saving;
+      try {
+        const user = await updateProfile({ nickname, bio });
+        currentUser = user;
+        notifyAuthChanged();
+        flashOk("profile-ok");
+      } catch (err) {
+        setErr("set-nickname-err", err instanceof ApiError && err.status !== 401 ? (err.message || STR.errGeneric) : STR.errServiceUnavailable);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = STR.saveProfile;
+      }
+    });
+
+    // 保存头像
+    $("avatar-submit")?.addEventListener("click", async () => {
+      setErr("set-avatar-err", "");
+      const sel = picker.getSelection();
+      const btn = $("avatar-submit");
+      btn.disabled = true;
+      btn.textContent = STR.saving;
+      try {
+        if (sel.file) {
+          currentUser = await uploadAvatar(sel.file);
+        } else if (sel.presetId) {
+          currentUser = await setAvatarPreset(sel.presetId);
+        } else {
+          return;
+        }
+        notifyAuthChanged();
+        flashOk("avatar-ok");
+      } catch (err) {
+        setErr("set-avatar-err", STR.errServiceUnavailable);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = STR.saveAvatar;
+      }
+    });
+
+    // 改密码
+    $("form-password")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setErr("password-err", "");
+      const current = $("set-current-password").value;
+      const next = $("set-new-password").value;
+      const confirm = $("set-new-password-confirm").value;
+      let ok = true;
+      if (!current) { setErr("set-current-password-err", STR.errRequired); ok = false; }
+      else setErr("set-current-password-err", "");
+      if (next.length < 8) { setErr("set-new-password-err", STR.errPasswordShort); ok = false; }
+      else setErr("set-new-password-err", "");
+      if (confirm !== next) { setErr("set-new-password-confirm-err", STR.errPasswordMismatch); ok = false; }
+      else setErr("set-new-password-confirm-err", "");
+      if (!ok) return;
+      const btn = $("password-submit");
+      btn.disabled = true;
+      btn.textContent = STR.saving;
+      try {
+        await changePassword({ current_password: current, new_password: next, new_password_confirm: confirm });
+        $("set-current-password").value = "";
+        $("set-new-password").value = "";
+        $("set-new-password-confirm").value = "";
+        flashOk("password-ok");
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) setErr("set-current-password-err", STR.errPasswordWrong);
+        else if (err instanceof ApiError && err.status === 400) setErr("password-err", err.message || STR.errGeneric);
+        else setErr("password-err", STR.errServiceUnavailable);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = STR.changePasswordBtn;
+      }
+    });
+
+    // 退出登录
+    $("settings-logout")?.addEventListener("click", async () => {
+      try { await logout(); } catch {}
+      notifyAuthChanged();
+      location.replace(ACCOUNT_URL);
+    });
+  </script>
+</Base>

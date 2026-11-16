@@ -1,0 +1,9 @@
+---
+import PromptPage from "../../../views/PromptPage.astro";
+import { prompts, scenes } from "../../../lib/content";
+export function getStaticPaths() {
+  return [...prompts, ...scenes].map((item) => ({ params: { id: item.id }, props: { item } }));
+}
+const { item } = Astro.props;
+---
+<PromptPage lang="en" item={item} />

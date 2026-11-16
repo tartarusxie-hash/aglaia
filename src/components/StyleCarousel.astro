@@ -1,0 +1,224 @@
+---
+// 艺术风格轮播：39 张变身图横向循环，居中一张放大，其余明显缩小（0.8）；
+// 点任意一张进详情页；自动轮播，悬停/拖动/聚焦时暂停，不设计数。
+// 卡片尺寸与速度（用户 2026-11-14 15:07 定）：264px（手机）/ 330px（桌面），
+// 自动轮转间隔 2500ms。注意：首页第三页与资源库艺术风格盒共用本组件，
+// 改动同时影响两处。
+// 用户 2026-11-14 定：自动轮转不因系统减动效设置而停——之前轮播在用户手机上
+// 看似不动，正是因为减动效设置把自动播放关掉了。
+// 实现：三份拷贝 + transform 平移，滑出中间份时无动画跳回等价位置（无缝循环）。
+// 触摸可拖动；拖动超过 8px 则屏蔽随后的点击（防误触进详情）。
+import { STYLES } from "../lib/styles-data";
+import type { Lang } from "../lib/i18n";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const en = lang === "en";
+const copies = [0, 1, 2].flatMap((c) => STYLES.map((s) => ({ ...s, copy: c })));
+---
+
+<section
+  data-sc
+  class="style-carousel relative"
+  aria-label={en ? "Art styles carousel" : "艺术风格轮播"}
+>
+  <div data-sc-viewport class="cursor-grab touch-pan-y overflow-hidden active:cursor-grabbing">
+    <div
+      data-sc-track
+      class="flex gap-4 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
+    >
+      {copies.map((s, i) => (
+        <a
+          href={`/styles/${s.id}/`}
+          data-sc-item
+          data-sc-pos={i % STYLES.length}
+          aria-label={en ? `Open ${s.nameEn}` : `进入${s.nameZh}`}
+          class="group relative block w-[264px] shrink-0 scale-[0.8] overflow-hidden rounded-xl opacity-50 transition-all duration-500 sm:w-[330px]"
+        >
+          <img
+            src={`/brand/styles/${s.id}-card.webp`}
+            alt={en ? `Aglaia in ${s.nameEn} style` : `阿格莱亚变身${s.nameZh}`}
+            width="640"
+            height="360"
+            loading={s.copy === 1 && i % STYLES.length <= 6 ? "eager" : "lazy"}
+            decoding="async"
+            draggable="false"
+            class="aspect-video w-full select-none object-cover"
+          />
+          <span class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent px-3 pb-2.5 pt-8 text-white">
+            <span class="block text-[15px] font-semibold leading-snug">{s.nameZh}</span>
+            <span class="block text-xs leading-snug text-white/80">{s.nameEn}</span>
+          </span>
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <button
+    type="button"
+    data-sc-prev
+    aria-label={en ? "Previous style" : "上一个风格"}
+    class="absolute -left-1 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-bg/90 text-lg shadow-sm backdrop-blur hover:bg-bg sm:flex"
+  >
+    ‹
+  </button>
+  <button
+    type="button"
+    data-sc-next
+    aria-label={en ? "Next style" : "下一个风格"}
+    class="absolute -right-1 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-bg/90 text-lg shadow-sm backdrop-blur hover:bg-bg sm:flex"
+  >
+    ›
+  </button>
+
+  <style>
+    .style-carousel [data-sc-item].is-active {
+      transform: scale(1);
+      opacity: 1;
+      box-shadow: 0 8px 24px rgba(20, 20, 20, 0.14);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .style-carousel [data-sc-track],
+      .style-carousel [data-sc-item] {
+        transition: none !important;
+      }
+    }
+  </style>
+
+  <script>
+    const root = document.querySelector("[data-sc]");
+    if (root) {
+      const viewport = root.querySelector("[data-sc-viewport]");
+      const track = root.querySelector("[data-sc-track]");
+      const items = Array.from(root.querySelectorAll("[data-sc-item]"));
+      const prevBtn = root.querySelector("[data-sc-prev]");
+      const nextBtn = root.querySelector("[data-sc-next]");
+      const N = 39;
+
+      let index = N; // 从中间份的第一张开始
+      // 用户 2026-11-14 定：自动轮转不设减动效门槛（之前轮播在用户手机上
+      // 看似不动，就是减动效设置把自动播放关掉了）。
+      let paused = false;
+      let resumeTimer = 0;
+      let autoTimer = 0;
+
+      const metrics = () => {
+        // 注意：卡片带 scale 缩放，getBoundingClientRect 量到的是缩放后的宽，
+        // 会让平移量累计偏小、居中错位——必须用不受 transform 影响的 offsetWidth。
+        const first = items[0];
+        const w = first ? first.offsetWidth : 300;
+        const gap = 16;
+        const vw = viewport ? viewport.getBoundingClientRect().width : 0;
+        return { w, gap, vw };
+      };
+      const translateFor = (i) => {
+        const { w, gap, vw } = metrics();
+        return vw / 2 - (i * (w + gap) + w / 2);
+      };
+      const setTransform = (x, animate) => {
+        if (!track) return;
+        track.style.transition = animate ? "" : "none";
+        track.style.transform = `translateX(${x}px)`;
+        if (!animate) void track.offsetWidth; // 强制重排，使下一次动画从新位置起算
+      };
+      const markActive = () => {
+        items.forEach((el, i) => el.classList.toggle("is-active", i === index));
+      };
+      // 滑出中间份时跳回等价位置（内容相同，视觉无缝）。
+      const normalize = () => {
+        if (index >= 2 * N) { index -= N; setTransform(translateFor(index), false); }
+        else if (index < N) { index += N; setTransform(translateFor(index), false); }
+        markActive();
+      };
+      const goTo = (i, animate = true) => {
+        index = i;
+        setTransform(translateFor(index), animate);
+        markActive();
+      };
+      const step = (d) => goTo(index + d);
+
+      const startAuto = () => {
+        stopAuto();
+        if (paused) return;
+        autoTimer = window.setInterval(() => {
+          step(1);
+          window.setTimeout(normalize, 550);
+        }, 2500);
+      };
+      const stopAuto = () => { if (autoTimer) { window.clearInterval(autoTimer); autoTimer = 0; } };
+      const pause = () => { paused = true; stopAuto(); window.clearTimeout(resumeTimer); };
+      const resumeSoon = () => {
+        window.clearTimeout(resumeTimer);
+        resumeTimer = window.setTimeout(() => { paused = false; startAuto(); }, 2500);
+      };
+
+      prevBtn?.addEventListener("click", () => { pause(); step(-1); window.setTimeout(normalize, 550); resumeSoon(); });
+      nextBtn?.addEventListener("click", () => { pause(); step(1); window.setTimeout(normalize, 550); resumeSoon(); });
+
+      root.addEventListener("mouseenter", pause);
+      root.addEventListener("mouseleave", resumeSoon);
+      root.addEventListener("focusin", pause);
+      root.addEventListener("focusout", resumeSoon);
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) stopAuto();
+        else if (!paused) startAuto();
+      });
+
+      // 拖动：指针按下拖动轨道，松手吸附到最近一张；拖动则屏蔽点击。
+      let dragging = false;
+      let dragged = false;
+      let startX = 0;
+      let startT = 0;
+      let curT = 0;
+      const onDown = (e) => {
+        dragging = true;
+        dragged = false;
+        startX = e.clientX;
+        startT = translateFor(index);
+        curT = startT;
+        pause();
+        // 注意：不要在这里 setPointerCapture——捕获会把 mouseup 重定向到
+        // viewport，click 的落点就变成 viewport 而不是卡片链接，鼠标点卡片
+        // 永远进不了详情（2026-11-15 实测：真点击不跳转、JS click 可跳转）。
+        // 捕获只在确认拖动后才接管（见 onMove），静止点按不经过捕获。
+      };
+      const onMove = (e) => {
+        if (!dragging) return;
+        if (e.buttons === 0) { onUp(); return; } // 漏掉 pointerup 时的兜底
+        const dx = e.clientX - startX;
+        if (Math.abs(dx) > 8) {
+          if (!dragged) viewport?.setPointerCapture?.(e.pointerId);
+          dragged = true;
+        }
+        curT = startT + dx;
+        setTransform(curT, false);
+      };
+      const onUp = () => {
+        if (!dragging) return;
+        dragging = false;
+        const { w, gap, vw } = metrics();
+        const raw = (vw / 2 - curT - w / 2) / (w + gap);
+        const target = Math.max(0, Math.min(items.length - 1, Math.round(raw)));
+        goTo(target);
+        window.setTimeout(normalize, 550);
+        resumeSoon();
+      };
+      viewport?.addEventListener("pointerdown", onDown);
+      viewport?.addEventListener("pointermove", onMove);
+      viewport?.addEventListener("pointerup", onUp);
+      viewport?.addEventListener("pointercancel", onUp);
+      // 未接管捕获时松手可能落在 viewport 外，window 上也兜底收尾
+      //（onUp 有 dragging 守卫，重复触发无害）。
+      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", onUp);
+      root.addEventListener("click", (e) => {
+        if (dragged) { e.preventDefault(); e.stopPropagation(); dragged = false; }
+      }, true);
+
+      window.addEventListener("resize", () => setTransform(translateFor(index), false));
+
+      goTo(N, false);
+      startAuto();
+    }
+  </script>
+</section>

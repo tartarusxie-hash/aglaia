@@ -1,0 +1,144 @@
+---
+import Base from "../layouts/Base.astro";
+import LibraryTrack from "../components/LibraryTrack.astro";
+import { lp, type Lang } from "../lib/i18n";
+import { SKILLS, SKILL_CATEGORIES, SKILL_FLAGS } from "../lib/skills-data.mjs";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const en = lang === "en";
+const steps = en
+  ? [
+      ["1 · Download & unzip", "Download the zip below and unzip it — you get a single folder named aglaia."],
+      ["2 · Put it in your agent's skills directory", "Move the aglaia folder into the skills directory of your coding agent — for example ~/.claude/skills/ for Claude Code, or the skills folder your agent documents. The lookup script inside needs Node ≥ 18 and nothing else."],
+      ["3 · Ask your agent", "Start a new session and describe the interface you want. When a name or a prompt is needed, your agent searches Aglaia first, then builds — or hands you the assembled prompt."],
+    ]
+  : [
+      ["1 · 下载并解压", "下载下面的 zip 并解压，得到一个名为 aglaia 的文件夹。"],
+      ["2 · 放进你的 agent 的 skills 目录", "把 aglaia 文件夹放进你的编码 agent 的 skills 目录——例如 Claude Code 的 ~/.claude/skills/，或你的 agent 文档里写明的 skills 文件夹。内含的查询脚本只需要 Node ≥ 18，零依赖。"],
+      ["3 · 开口让 agent 干活", "新开一个会话，描述你想要的界面。需要查名字或提示词时，agent 会先查阿格莱亚，再动手做——或者把拼好的提示词交给你。"],
+    ];
+---
+
+<Base lang={lang} title={en ? "Get the Aglaia skill" : "skills 下载"} description={en ? "Install Aglaia as a skill for your coding agent: look up names and prompts before building." : "把阿格莱亚装成你的编码 agent 的 skill：动手之前，先查名字、拿提示词。"} current="skills">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10">
+    {/*
+      分区头图（与风格索引页同一做法）：她在右、工作台在前，标题放左；
+      工作台左缘实测约 51.8%，标题块限宽 46%（留约 6% 安全距离）。
+      用户 2026-11-16：标题块垂直居中，简介加大到 text-lg + leading-loose，
+      并说清为什么设这个分区、收录了什么与多少。
+      手机端图是通栏带、标题在图下白底上。
+      本页无左侧导览栏（用户 2026-11-16：skills 没有分类，不需要）。
+    */}
+    <header class="relative overflow-hidden rounded-xl border border-line sm:aspect-video">
+      <img
+        src="/brand/sections/skills-bg.webp"
+        alt=""
+        aria-hidden="true"
+        width="1920"
+        height="1080"
+        loading="eager"
+        decoding="async"
+        class="relative block aspect-video w-full object-contain sm:absolute sm:inset-0 sm:h-full sm:w-full sm:object-cover"
+      />
+      <div class="absolute inset-0 hidden bg-gradient-to-r from-white/75 via-white/25 to-transparent sm:block" aria-hidden="true"></div>
+      <div class="relative p-5 sm:absolute sm:left-0 sm:top-1/2 sm:-translate-y-1/2 sm:max-w-[46%] sm:p-6 lg:p-8">
+        <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">{en ? "Design skills" : "设计 skills"}</h1>
+        <p class="mt-4 max-w-2xl text-lg leading-loose text-ink2">
+          {en
+            ? "Resources alone aren't enough — AI needs a way to actually use them. Design skills teach your coding assistant to design the professional way: before building, it looks up names and fetches prompts from Aglaia. Above is Aglaia's own skill (free download); below are 19 free, open-source third-party design skills, every license verified."
+            : "光有资源还不够——还得有办法让 AI 真正用起来。设计 skills 就是让 AI 按专业方法做设计的技能：装进你的编码助手，它做界面前会先来阿格莱亚查名字、拿提示词。本页上方是阿格莱亚自己的技能（免费下载），下方是 19 个开源免费的第三方设计技能，全部经过许可证核验。"}
+        </p>
+      </div>
+    </header>
+
+    <LibraryTrack lang={lang} active="skills" />
+
+    <h2 class="mt-8 text-2xl font-bold tracking-tight">{en ? "The Aglaia skill" : "Aglaia skill"}</h2>
+    <div class="mt-4 rounded-lg border border-line bg-surface p-6">
+      <div class="flex flex-wrap items-center gap-4">
+        <a href="/downloads/aglaia-skill.zip" download class="rounded-md bg-primary px-5 py-3 font-semibold text-onprimary hover:opacity-90 transition-opacity">
+          {en ? "Download aglaia-skill.zip" : "下载 aglaia-skill.zip"}
+        </a>
+        <span class="text-sm text-muted">{en ? "Contains: SKILL.md · scripts/aglaia-lookup.mjs" : "内含：SKILL.md · scripts/aglaia-lookup.mjs"}</span>
+      </div>
+      <ol class="mt-6 space-y-4">
+        {steps.map(([t, d]) => (
+          <li>
+            <div class="font-semibold">{t}</div>
+            <p class="mt-1 leading-relaxed text-ink2">{d}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+
+    <div class="mt-8 grid gap-3 md:grid-cols-2">
+      <div class="rounded-lg border border-line bg-surface p-6">
+        <div class="font-semibold">{en ? "Available now" : "现状"}</div>
+        <ul class="mt-2 list-disc space-y-1.5 pl-5 leading-relaxed text-ink2">
+          <li>{en ? "Manual install: download the zip above and place the folder yourself." : "手动安装：下载上面的 zip，自己把文件夹放好。"}</li>
+          <li>{en ? <>The data endpoints are live: <a class="underline underline-offset-4" href="/registry.json">registry.json</a>, <a class="underline underline-offset-4" href="/registry-ext.json">registry-ext.json</a>, <a class="underline underline-offset-4" href="/llms.txt">llms.txt</a> — the script can also be pointed at them directly.</> : <>数据接口已经可用：<a class="underline underline-offset-4" href="/registry.json">registry.json</a>、<a class="underline underline-offset-4" href="/registry-ext.json">registry-ext.json</a>、<a class="underline underline-offset-4" href="/llms.txt">llms.txt</a>——脚本也可以直接指向它们查询。</>}</li>
+        </ul>
+      </div>
+      <div class="rounded-lg border border-line bg-surface p-6">
+        <div class="font-semibold">{en ? "Coming at launch" : "预告"}</div>
+        <ul class="mt-2 list-disc space-y-1.5 pl-5 leading-relaxed text-ink2">
+          <li>{en ? <>One-line install via <code class="rounded bg-subtle px-1.5 py-0.5 font-mono text-[0.9em]">npx skills add</code> — it arrives when the public GitHub repository opens at launch.</> : <>一行命令安装（<code class="rounded bg-subtle px-1.5 py-0.5 font-mono text-[0.9em]">npx skills add</code>）——等正式上线、GitHub 仓库公开后提供。</>}</li>
+          <li>{en ? "Until then, the zip on this page is the install — same contents, same script." : "在那之前，本页的 zip 就是安装包——内容与脚本完全相同。"}</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2 class="mt-16 text-2xl font-bold tracking-tight">{en ? "Free skills library" : "免费技能库"}</h2>
+    <p class="mt-3 max-w-2xl leading-relaxed text-ink2">
+      {en
+        ? "Open-source design skills from across the web, shared here for free. Every entry links to its original repository — download and install from there. We only list skills with a clear open-source license (MIT, Apache-2.0 and the like); skills with no license, or an unclear one, are left out."
+        : "全网找到的开源设计 skills，在这里免费分享。每个条目都链接到它的原仓库，下载与安装请去原仓库。收录标准：只收有明确开源许可的（MIT、Apache-2.0 等），没有许可或许可不明的不要。"}
+    </p>
+    <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
+      {en
+        ? "On the recent rumour: Meta did open-source skill-adjacent work in 2026 (the Astryx design system, the Muse Gadgets SDK and VR agentic tools), but none of it is a general design-skills release; Google shipped Skills as a product feature in Gemini, not an open-source library. The hype likely traces to a personal repo by a Google engineer. The real industry event was Anthropic donating the Agent Skills standard to the Linux Foundation on Oct 22, 2026."
+        : "关于最近的传闻：Meta 今年确实开源了与 skills 相关的工作（Astryx 设计系统、Muse Gadgets SDK、VR 开发工具），但没有一个是通用设计 skills 的发布；Google 没有开源新 skills，Gemini 里的 Skills 是产品功能。传闻的源头很可能是 Google 工程师 Addy Osmani 的个人仓库。真正的行业事件是 Anthropic 在 2026 年 10 月 22 日把 Agent Skills 标准捐给了 Linux 基金会。"}
+    </p>
+
+    <div class="mt-6 overflow-x-auto rounded-lg border border-line">
+      <table class="w-full min-w-[680px] border-collapse text-sm">
+        <thead>
+          <tr class="bg-surface text-left">
+            <th class="px-4 py-3 font-semibold">{en ? "Skill" : "名称"}</th>
+            <th class="px-4 py-3 font-semibold">{en ? "Category" : "分类"}</th>
+            <th class="px-4 py-3 font-semibold">{en ? "What it covers" : "内容"}</th>
+            <th class="px-4 py-3 font-semibold">{en ? "License" : "许可"}</th>
+            <th class="px-4 py-3 text-right font-semibold">★</th>
+          </tr>
+        </thead>
+        <tbody>
+          {SKILLS.map((s) => (
+            <tr class="border-t border-line align-top">
+              <td class="px-4 py-3">
+                <a href={s.repo} target="_blank" rel="noopener" class="font-semibold hover:underline underline-offset-4">{s.name} ↗</a>
+                <div class="mt-0.5 text-xs text-muted">{s.author}</div>
+                {s.flag && <div class="mt-0.5 text-xs text-muted">{SKILL_FLAGS[s.flag][en ? "en" : "zh"]}</div>}
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 text-ink2">{SKILL_CATEGORIES[s.category][en ? "en" : "zh"]}</td>
+              <td class="px-4 py-3 leading-relaxed text-ink2">{en ? s.summaryEn : s.summaryZh}</td>
+              <td class="whitespace-nowrap px-4 py-3">{s.license}</td>
+              <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums text-ink2">{s.stars === null ? "—" : s.stars.toLocaleString("en-US")}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-3 text-sm text-muted">
+      {en
+        ? "Star counts were verified on Nov 15, 2026. For install commands, see each repository's README."
+        : "★ 数为 2026 年 11 月 15 日核实值。安装方式见各仓库的 README。"}
+    </p>
+
+    <p class="mt-8 text-sm text-muted">
+      {en
+        ? <>New to what Aglaia is? Start with the <a class="underline underline-offset-4 hover:text-ink2" href={lp(lang, "/library")}>Library</a>.</>
+        : <>还不熟阿格莱亚？先从<a class="underline underline-offset-4 hover:text-ink2" href={lp(lang, "/library")}>资源库</a>逛一圈。</>}
+    </p>
+  </div>
+</Base>

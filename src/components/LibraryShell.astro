@@ -1,0 +1,246 @@
+---
+// 资源库分区页共用壳：图片头图（各分区专属图）+ 泡泡轨道 + 左侧索引栏 + 内容区 + 分页。
+// 用户 2026-11-15：返回键与面包屑全删，只留泡泡轨道作导航（「全部」常驻轨道内）。
+// 头图做法与风格索引页一致（StylesIndexPage.astro）：16:9 框、整图完整可见不裁切、
+// 大标题 + 简介压在留空一侧、薄纱在文字一侧；手机端图是通栏带、标题在图下白底上。
+// 用户 2026-11-16：标题块垂直居中（原先贴顶，留白太多像未完成），简介字号加大到
+// text-lg + leading-loose；简介必须说清两件事——为什么设这个分区、收录了什么与多少。
+// 过滤与分页走一套通用客户端脚本：条目带 data-lib-item / data-lib-cat，分类按钮带 data-lib-filter。
+import Base from "../layouts/Base.astro";
+import { dict, lp, type Lang } from "../lib/i18n";
+import LibraryTrack from "./LibraryTrack.astro";
+import type { LibrarySection } from "../lib/library";
+
+export interface SidebarGroup {
+  key: string;
+  label: string;
+  count: number;
+  /** 可选：行内的小链接（如组件模式的"定义 ↗"）。 */
+  extraHref?: string;
+  extraLabel?: string;
+}
+
+/** 分区图片头图（与风格索引页同一做法）。标题块限宽必须按该图的实测内容边缘定：
+ *  标题侧留出安全距离，不得压到她的脸、身体与道具。maxWidthClass 写完整 Tailwind 类
+ *  （如 "sm:max-w-[38%]"），必须字面出现在调用方文件里，Tailwind 才能扫到并生成。 */
+export interface SectionHero {
+  /** 分区头图（1920×1080，public/brand/sections/ 下）。 */
+  src: string;
+  /** 标题压在哪一侧——她在哪侧，标题就放对侧。 */
+  side: "left" | "right";
+  /** 标题块的桌面端限宽，完整 Tailwind 类。 */
+  maxWidthClass: string;
+}
+
+interface Props {
+  lang: Lang;
+  section: LibrarySection;
+  title: string;
+  /** 分区简介（用户 2026-11-16：必须说清为什么设这个分区、收录了什么与多少）。 */
+  intro?: string;
+  /** 左侧索引分组（已有分类数据，不要编新分类）。 */
+  groups: SidebarGroup[];
+  total: number;
+  /** 文字型分区（提示词/资源/原理）才分页；视觉型（组件/效果）不分页。 */
+  paged?: boolean;
+  /** 分区页顶部的额外说明（如资源页的许可提示），可选。 */
+  note?: string;
+  /** 分区图片头图；不传则用原来的纯文字标题头。 */
+  hero?: SectionHero;
+}
+
+const { lang, section, title, intro, groups, total, paged = false, note, hero } = Astro.props;
+const d = dict(lang);
+const en = lang === "en";
+---
+
+<Base lang={lang} title={title} current={section}>
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-8 pb-16">
+    {hero ? (
+      <header class="relative overflow-hidden rounded-xl border border-line sm:aspect-video">
+        <img
+          src={hero.src}
+          alt=""
+          aria-hidden="true"
+          width="1920"
+          height="1080"
+          loading="eager"
+          decoding="async"
+          class="relative block aspect-video w-full object-contain sm:absolute sm:inset-0 sm:h-full sm:w-full sm:object-cover"
+        />
+        <div class={`absolute inset-0 hidden ${hero.side === "left" ? "bg-gradient-to-r" : "bg-gradient-to-l"} from-white/75 via-white/25 to-transparent sm:block`} aria-hidden="true"></div>
+        <div class={`relative p-5 sm:absolute sm:top-1/2 sm:-translate-y-1/2 ${hero.side === "left" ? "sm:left-0" : "sm:right-0"} ${hero.maxWidthClass} sm:p-6 lg:p-8`}>
+          <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">{title}</h1>
+          {intro && <p class="mt-4 max-w-2xl text-lg leading-loose text-ink2">{intro}</p>}
+        </div>
+      </header>
+    ) : (
+      <header class="library-hero" data-bg-slot="aglaia-in-library">
+        <h1 class="text-3xl font-bold tracking-tight">{title}</h1>
+        {intro && <p class="mt-3 max-w-2xl leading-relaxed text-ink2">{intro}</p>}
+        {note && <p class="mt-4 max-w-2xl rounded-lg border border-line bg-subtle p-4 text-sm leading-relaxed text-ink2">{note}</p>}
+      </header>
+    )}
+    {hero && note && (
+      <p class="mt-4 max-w-2xl rounded-lg border border-line bg-subtle p-4 text-sm leading-relaxed text-ink2">{note}</p>
+    )}
+
+    <LibraryTrack lang={lang} active={section} />
+
+    <div class="mt-8 flex flex-col gap-8 lg:flex-row">
+      <!-- 左侧索引栏：桌面端粘性边栏，移动端内容区上方横向滚动条 -->
+      <aside class="lg:w-[220px] lg:shrink-0">
+        <div class="lg:sticky lg:top-24">
+          <div class="flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0" role="group" aria-label={en ? "Categories" : "分类索引"}>
+            <button
+              type="button"
+              data-lib-filter=""
+              aria-pressed="true"
+              class="lib-filter-btn flex shrink-0 items-center justify-between gap-3 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-subtle"
+            >
+              <span>{d.library.all}</span>
+              <span class="text-muted">{total}</span>
+            </button>
+            {groups.map((g) => (
+              <div class="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  data-lib-filter={g.key}
+                  aria-pressed="false"
+                  class="lib-filter-btn flex flex-1 items-center justify-between gap-3 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-subtle"
+                >
+                  <span>{g.label}</span>
+                  <span class="text-muted">{g.count}</span>
+                </button>
+                {g.extraHref && (
+                  <a href={g.extraHref} class="hidden shrink-0 rounded-md px-1.5 py-2 text-xs text-muted hover:text-ink hover:underline underline-offset-4 lg:block">
+                    {g.extraLabel || d.library.definition} ↗
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+          <p class="mt-5 hidden border-t border-line pt-4 text-sm lg:block">
+            <a href={lp(lang, "/skills")} class="text-ink2 hover:text-ink hover:underline underline-offset-4">{d.library.forAi} →</a>
+          </p>
+        </div>
+      </aside>
+
+      <!-- 内容区：条目由各分区页以 slot 传入，每条带 data-lib-item / data-lib-cat -->
+      <div class="min-w-0 flex-1">
+        <slot />
+
+        <p data-lib-empty class="mt-6 hidden rounded-lg border border-line bg-subtle p-5 text-ink2">{d.library.noResults}</p>
+
+        {paged && (
+          <div class="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-line pt-5">
+            <p data-lib-status class="text-sm text-muted" aria-live="polite"></p>
+            <label class="ml-auto flex items-center gap-2 text-sm text-ink2">
+              {d.library.perPage}
+              <select data-lib-perpage class="rounded-md border border-linestrong bg-surface px-2 py-1.5 text-sm">
+                <option value="10">10</option>
+                <option value="20" selected>20</option>
+                <option value="50">50</option>
+              </select>
+            </label>
+            <div class="flex items-center gap-1.5" data-lib-pager>
+              <button type="button" data-lib-prev class="rounded-md border border-line px-3 py-1.5 text-sm hover:bg-subtle disabled:opacity-40">{d.library.prevPage}</button>
+              <span data-lib-pages class="flex items-center gap-1.5"></span>
+              <button type="button" data-lib-next class="rounded-md border border-line px-3 py-1.5 text-sm hover:bg-subtle disabled:opacity-40">{d.library.nextPage}</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 通用过滤 + 分页：读 ?cat= / ?page= 初态，点分类即过滤并同步 URL。
+    const items = Array.from(document.querySelectorAll("[data-lib-item]")) as HTMLElement[];
+    const filterBtns = Array.from(document.querySelectorAll("[data-lib-filter]")) as HTMLButtonElement[];
+    const emptyEl = document.querySelector("[data-lib-empty]") as HTMLElement | null;
+    const statusEl = document.querySelector("[data-lib-status]") as HTMLElement | null;
+    const perSelect = document.querySelector("[data-lib-perpage]") as HTMLSelectElement | null;
+    const prevBtn = document.querySelector("[data-lib-prev]") as HTMLButtonElement | null;
+    const nextBtn = document.querySelector("[data-lib-next]") as HTMLButtonElement | null;
+    const pagesEl = document.querySelector("[data-lib-pages]") as HTMLElement | null;
+    const paged = Boolean(perSelect);
+    const lang = document.documentElement.lang.startsWith("en") ? "en" : "zh";
+
+    const params = new URLSearchParams(location.search);
+    const validCats = new Set(filterBtns.map((b) => b.dataset.libFilter || ""));
+    let cat = params.get("cat") || "";
+    if (!validCats.has(cat)) cat = "";
+    let page = Math.max(1, parseInt(params.get("page") || "1", 10) || 1);
+    let per = paged ? Number(perSelect!.value) : Number.POSITIVE_INFINITY;
+
+    function statusText(a: number, b: number, n: number): string {
+      if (n === 0) return lang === "en" ? "0 of 0" : "共 0 条";
+      return lang === "en" ? `${a}–${b} of ${n}` : `第 ${a}–${b} 条, 共 ${n} 条`;
+    }
+
+    function renderPages(totalPages: number) {
+      if (!pagesEl) return;
+      pagesEl.innerHTML = "";
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = String(i);
+        btn.setAttribute("aria-current", i === page ? "page" : "false");
+        btn.className = i === page
+          ? "rounded-md bg-ink px-3 py-1.5 text-sm font-medium text-bg"
+          : "rounded-md border border-line px-3 py-1.5 text-sm hover:bg-subtle";
+        btn.addEventListener("click", () => { page = i; apply(); });
+        pagesEl.appendChild(btn);
+      }
+    }
+
+    function apply() {
+      const visible = items.filter((it) => {
+        if (!cat) return true;
+        return (it.dataset.libCat || "").split(" ").includes(cat);
+      });
+      const n = visible.length;
+      const totalPages = Math.max(1, Math.ceil(n / per));
+      if (page > totalPages) page = totalPages;
+      // 非分页页（组件/效果）per 为 Infinity：(page - 1) * per 得 NaN，
+      // i >= NaN 恒为 false，曾导致全部卡片被 display:none 隐藏。
+      // 起止下标按分页与否分开算。
+      const start = paged ? (page - 1) * per : 0;
+      const end = paged ? page * per : n;
+      const from = n === 0 ? 0 : start + 1;
+      const to = Math.min(n, end);
+      items.forEach((it) => { it.style.display = "none"; });
+      visible.forEach((it, i) => {
+        it.style.display = i >= start && i < end ? "" : "none";
+      });
+      emptyEl?.classList.toggle("hidden", n !== 0);
+      if (statusEl) statusEl.textContent = statusText(from, to, n);
+      if (paged) {
+        renderPages(totalPages);
+        if (prevBtn) prevBtn.disabled = page <= 1;
+        if (nextBtn) nextBtn.disabled = page >= totalPages;
+      }
+      filterBtns.forEach((b) => {
+        const on = (b.dataset.libFilter || "") === cat;
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+        b.classList.toggle("bg-subtle", on);
+        b.classList.toggle("font-medium", on);
+      });
+      const url = new URL(location.href);
+      if (cat) url.searchParams.set("cat", cat); else url.searchParams.delete("cat");
+      if (paged && page > 1) url.searchParams.set("page", String(page)); else url.searchParams.delete("page");
+      history.replaceState(null, "", url);
+    }
+
+    filterBtns.forEach((b) => b.addEventListener("click", () => {
+      cat = b.dataset.libFilter || "";
+      page = 1;
+      apply();
+    }));
+    perSelect?.addEventListener("change", () => { per = Number(perSelect.value) || 20; page = 1; apply(); });
+    prevBtn?.addEventListener("click", () => { if (page > 1) { page--; apply(); } });
+    nextBtn?.addEventListener("click", () => { page++; apply(); });
+    apply();
+  </script>
+</Base>

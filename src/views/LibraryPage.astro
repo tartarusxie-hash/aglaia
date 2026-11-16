@@ -1,0 +1,363 @@
+---
+import Base from "../layouts/Base.astro";
+import { dict, lp, nameOf, summaryOf, type Lang } from "../lib/i18n";
+import { entries, effects, prompts, scenes, resources, guides, type Item } from "../lib/content";
+import { itemHref, effectHref } from "../lib/links";
+import LibraryTrack from "../components/LibraryTrack.astro";
+import StyleCarousel from "../components/StyleCarousel.astro";
+import SectionCarousel, { type SectionCard } from "../components/SectionCarousel.astro";
+import { COMPONENT_DEMOS } from "../lib/component-demos.mjs";
+import { INTERACTIVE_EFFECTS, STATIC_EFFECTS } from "../lib/effects-data.mjs";
+import { SKILLS } from "../lib/skills-data.mjs";
+import { FONTS, FONT_CATEGORIES } from "../lib/fonts-data.mjs";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const en = lang === "en";
+const d = dict(lang);
+
+// 枢纽页八个分区框（用户 2026-11-15 晚：不体现数字，点进分区以后才看得到数量）。
+// 每个框与艺术风格框做法一致：桌面端 16:9、整图完整可见不裁切、标题+进入链接+
+// 一句简介放留空一侧、轮播贴框底；手机端图是通栏带、标题与轮播依次在图下。
+// 原框内的分类链接列表已去掉（分类仍在各分区页的左侧栏里）。
+// 标题宽度按各图实测内容边缘定（像素实测，见各条注释）：标题块不得压到她的脸、
+// 身体与道具；标题在左的框用左强薄纱，标题在右的框用右强薄纱。
+
+function effectDef(id: string) {
+  const idef = (INTERACTIVE_EFFECTS as any)[id];
+  const sdef = (STATIC_EFFECTS as any[]).find((s) => s.id === id);
+  return { html: idef?.cardHtml || sdef?.cardHtml || "", css: idef?.cardCss || sdef?.cardCss || "" };
+}
+
+const componentCards: SectionCard[] = entries.map((item) => {
+  const demo = (COMPONENT_DEMOS as any)[item.id];
+  return {
+    href: itemHref(lang, item),
+    title: nameOf(lang, item),
+    demoHtml: demo?.cardHtml || "",
+    demoCss: demo?.cardCss || "",
+    animated: Boolean(demo?.animated),
+    demoScale: true,
+  };
+});
+
+const effectCards: SectionCard[] = effects.map((item) => ({
+  href: effectHref(lang, item.id),
+  title: nameOf(lang, item),
+  demoHtml: effectDef(item.id).html,
+  demoCss: effectDef(item.id).css,
+  animated: false,
+}));
+
+const promptCards: SectionCard[] = [...prompts, ...scenes].map((item) => ({
+  href: itemHref(lang, item),
+  title: nameOf(lang, item),
+  sub: summaryOf(lang, item),
+  meta: item.kind === "scene" ? d.misc.sceneLevel : d.misc.componentLevel,
+}));
+
+const resourceCards: SectionCard[] = resources.map((item) => ({
+  href: item.url || "",
+  external: true,
+  title: nameOf(lang, item),
+  sub: summaryOf(lang, item),
+  meta: [item.license?.spdx || "", item.license?.author || ""].filter(Boolean).join(" · "),
+}));
+
+const guideTypeLabel = (g: Item) =>
+  g.guide_type === "discipline" ? d.learn.disciplines
+  : g.guide_type === "lab" ? d.learn.lab
+  : g.guide_type === "checklist" ? d.learn.checklist
+  : d.learn.principles;
+const learnCards: SectionCard[] = guides.map((item) => ({
+  href: itemHref(lang, item),
+  title: nameOf(lang, item),
+  sub: summaryOf(lang, item),
+  meta: guideTypeLabel(item),
+}));
+
+const skillCards: SectionCard[] = SKILLS.map((s) => ({
+  href: s.repo,
+  external: true,
+  title: s.name,
+  sub: s.author,
+  meta: s.stars === null ? "★ —" : `★ ${s.stars.toLocaleString("en-US")}`,
+}));
+
+// 字体卡：字体名 + 许可证一行小字。拉丁字体（languages 仅 latin 且 googleFonts 非空）
+// 卡片上多一行用该字体本身渲染的预览字；中文字体只做文字卡、不加载字体文件。
+const fontCards: SectionCard[] = FONTS.map((f) => ({
+  href: f.url,
+  external: true,
+  title: f.name,
+  sub: f.nameZh || f.author,
+  meta: `${f.license} · ${FONT_CATEGORIES[f.category][en ? "en" : "zh"]}`,
+  ...(f.googleFonts && !f.languages.includes("cjk")
+    ? { preview: { text: "Aglaia Design", fontFamily: f.googleFonts } }
+    : {}),
+}));
+// 预览字体合为一个 Google Fonts 请求（仅拉丁字体；中文字体不进这个列表）。
+const previewFonts = FONTS.filter((f) => f.googleFonts && !f.languages.includes("cjk"));
+const gfUrl =
+  "https://fonts.googleapis.com/css2?" +
+  previewFonts.map((f) => `family=${(f.googleFonts as string).replace(/ /g, "+")}`).join("&") +
+  "&display=swap";
+
+interface Box {
+  key: string;
+  title: string;
+  href: string;
+  button: string;
+  desc: string;
+  bg: string;
+  /** 标题所在一侧：left = 她在右，right = 她在左。 */
+  side: "left" | "right";
+  /** 标题块限宽（字面量 class，Tailwind 需静态扫描到）。 */
+  titleCls: string;
+  direction: "rtl" | "ltr";
+  variant: "visual" | "text";
+  cards: SectionCard[];
+  carouselLabel: string;
+}
+
+const boxes: Box[] = [
+  {
+    key: "components",
+    title: d.nav.components,
+    href: lp(lang, "/components"),
+    button: en ? "Browse components →" : "进入组件库 →",
+    desc: en
+      ? "Login forms, bottom sheets, pricing tables — every component has a name, usage notes and a matching prompt."
+      : "登录页、底部弹层、价格表……每个组件都有名字、用法和配套提示词。",
+    bg: "/brand/sections/components-bg.webp",
+    side: "right",
+    // 积木（三角块）最右到 57%，但在框底轮播区；标题区（上 62%）内容最右 45%，限宽 48% 留 7% 安全距。
+    titleCls: "sm:max-w-[48%]",
+    direction: "ltr",
+    variant: "visual",
+    cards: componentCards,
+    carouselLabel: en ? "Components carousel" : "组件轮播",
+  },
+  {
+    key: "effects",
+    title: d.nav.effects,
+    href: lp(lang, "/effects"),
+    button: en ? "Browse effects →" : "进入效果库 →",
+    desc: en
+      ? "Glassmorphism, neumorphism, spotlight cards — see each effect live, then take the code."
+      : "玻璃拟态、新拟态、聚光灯……点开就看得到效果，还能直接拿代码。",
+    bg: "/brand/sections/effects-bg.webp",
+    side: "left",
+    // 环绕光带左缘约 39.6%，限宽 36% 留约 3.6% 安全距（块内还有 p-6，文字实际止于约 34%）。
+    titleCls: "sm:max-w-[36%]",
+    direction: "rtl",
+    variant: "visual",
+    cards: effectCards,
+    carouselLabel: en ? "Effects carousel" : "效果轮播",
+  },
+  {
+    key: "prompts",
+    title: d.nav.prompts,
+    href: lp(lang, "/prompts"),
+    button: en ? "Browse prompts →" : "进入提示词库 →",
+    desc: en
+      ? "Fill-in prompts written to a seven-part template, for single components and whole pages — copy and use."
+      : "按七段模板写好的填空式提示词，组件级与整页级都有，复制就能用。",
+    bg: "/brand/sections/prompts-bg.webp",
+    side: "right",
+    // 对话框（含辉光）右缘约 52.5%，限宽 43% 留约 4.5% 安全距。
+    titleCls: "sm:max-w-[43%]",
+    direction: "ltr",
+    variant: "text",
+    cards: promptCards,
+    carouselLabel: en ? "Prompts carousel" : "提示词轮播",
+  },
+  {
+    key: "resources",
+    title: d.nav.resources,
+    href: lp(lang, "/resources"),
+    button: en ? "Browse resources →" : "进入资源 →",
+    desc: en
+      ? "Open-source component libraries, templates and design specs from across the web, all linked to their original projects."
+      : "全网找来的开源组件库、模板与设计规范，全部外链到原项目。",
+    bg: "/brand/sections/resources-bg.webp",
+    side: "left",
+    // 她左侧实物（书/披风）左缘约 58.5%，胡须尖约 54.8%，限宽 50% 留约 4.8% 安全距。
+    titleCls: "sm:max-w-[50%]",
+    direction: "rtl",
+    variant: "text",
+    cards: resourceCards,
+    carouselLabel: en ? "Resources carousel" : "资源轮播",
+  },
+  {
+    key: "learn",
+    title: d.nav.learn,
+    href: lp(lang, "/learn"),
+    button: en ? "Start learning →" : "开始学设计 →",
+    desc: en
+      ? "Discipline guides, design principles and hands-on instruments — start learning design here."
+      : "学科导览、设计原则与能上手玩的仪器，学设计从这里开始。",
+    bg: "/brand/sections/learn-bg.webp",
+    side: "right",
+    // 书最右到 55.8%，但在框底轮播区；标题区（上 62%）内容最右 44.4%，限宽 50% 留约 5.6% 安全距。
+    titleCls: "sm:max-w-[50%]",
+    direction: "ltr",
+    variant: "text",
+    cards: learnCards,
+    carouselLabel: en ? "Learn carousel" : "学设计轮播",
+  },
+  {
+    key: "skills",
+    title: d.nav.skills,
+    href: lp(lang, "/skills"),
+    button: en ? "Browse skills →" : "进入 skills →",
+    desc: en ? "Open-source design skills, all free to use." : "开源设计 skills，全部免费分享。",
+    bg: "/brand/sections/skills-bg.webp",
+    side: "left",
+    // 工作台左缘 48.3% 在框底轮播区；标题区（上 62%）内容左缘 55.8%，限宽 50% 留约 5.8% 安全距。
+    titleCls: "sm:max-w-[50%]",
+    direction: "rtl",
+    variant: "text",
+    cards: skillCards,
+    carouselLabel: en ? "Skills carousel" : "设计 skills 轮播",
+  },
+  {
+    key: "fonts",
+    title: d.nav.fonts,
+    href: lp(lang, "/fonts"),
+    button: en ? "Browse fonts →" : "进入字体库 →",
+    desc: en
+      ? "Open-source free fonts — sans, serif, mono, display and handwriting, all free to use."
+      : "开源免费字体：无衬线、衬线、等宽、展示与手写，全部可以免费使用。",
+    bg: "/brand/sections/fonts-bg.webp",
+    side: "right",
+    // 书桌右缘约 53%、打字机右缘约 50%，限宽 42% 留约 5% 安全距。
+    titleCls: "sm:max-w-[42%]",
+    direction: "ltr",
+    variant: "text",
+    cards: fontCards,
+    carouselLabel: en ? "Fonts carousel" : "字体轮播",
+  },
+];
+---
+
+<Base lang={lang} title={en ? "Library" : "资源库"} description={en ? "Everything Aglaia collects: art styles, component index, effects, prompt library, open-source resources, design principles — and agent access." : "阿格莱亚收录的全部资源：艺术风格、组件索引、效果库、prompt 库、开源资源、设计原理，以及给 AI 的接入方式。"} current="library">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10 pb-16">
+    {/*
+      图书馆横幅位（背景图预留）：
+      用户会让 GPT 做一张"阿格莱亚在图书馆里"的背景图，尚未交付。
+      图到后作此区的背景（background-image + 浅色遮罩保文字可读），
+      现在只放干净的标题文字——不放假图、不放占位图、不硬塞吉祥物立图。
+    */}
+    <header class="library-hero" data-bg-slot="aglaia-in-library">
+      <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">{en ? "Library" : "资源库"}</h1>
+    </header>
+
+    <LibraryTrack lang={lang} active="all" />
+
+    <!-- 分区：每区一个小横方框。艺术风格居首。
+         用户 2026-11-15 晚：背景图换成阿格莱亚在右侧的那张（与首页第三页同一张，
+         1920×1080，她在右、左侧大面积留空），文字放左侧。框的宽高比 = 图的 16:9，
+         整图完整可见不裁切；标题在左上空处（画笔尖在框宽约 56% 处，标题块限宽 46%
+         碰不到她），轮播贴在框底。旧图（她居中的画家图）已不用，站内版已删，
+         原图仍存档在 goals/figma/files/aglaia-art-styles-section-bg-2026-11-13.jpg。
+         手机端：图仍是标题上方的通栏带（整图可见），标题与轮播依次在图下——
+         窄屏上叠放会把图盖满，故不叠放。
+         其余七个框（2026-11-15 晚补）：同一做法，图在 /brand/sections/，
+         她在左的框标题放右（右强薄纱、轮播左→右），她在右的框标题放左
+         （左强薄纱、轮播右→左）。 -->
+    <div class="mt-12 space-y-6">
+      <div class="overflow-hidden rounded-xl border border-line">
+        <section class="relative overflow-hidden sm:aspect-video">
+          <img
+            src="/brand/styles/art-styles-bg-right.webp"
+            alt=""
+            aria-hidden="true"
+            width="1920"
+            height="1080"
+            loading="lazy"
+            decoding="async"
+            class="relative block aspect-video w-full object-contain sm:absolute sm:inset-0 sm:h-full sm:w-full sm:object-cover"
+          />
+          <div class="absolute inset-0 hidden bg-gradient-to-r from-white/75 via-white/25 to-transparent sm:block" aria-hidden="true"></div>
+          <div class="relative p-5 sm:absolute sm:left-0 sm:top-0 sm:max-w-[46%] sm:p-6 lg:p-8">
+            <div class="flex flex-wrap items-baseline gap-3">
+              <h2 class="text-xl font-bold tracking-tight">
+                <a href="/styles/" class="hover:underline underline-offset-4">{d.nav.styles}</a>
+              </h2>
+              <a
+                href="/styles/"
+                class="ml-auto rounded-md bg-primary px-4 py-2 text-sm font-semibold text-onprimary transition-opacity hover:opacity-90"
+              >
+                {en ? "Enter the styles library →" : "进入风格库 →"}
+              </a>
+            </div>
+            <p class="mt-3 max-w-2xl text-[15px] leading-relaxed text-ink2">
+              {en
+                ? "From Impressionism to Frutiger Aero. Each one: Aglaia transformed into the style, the first prompt to say to an AI, and a machine-usable style card. Entries are in Chinese for now."
+                : "从印象派到 Frutiger Aero。每篇都有阿格莱亚的变身形象、给 AI 的第一个 prompt，和一张机器可用的风格卡。"}
+            </p>
+          </div>
+          <div class="relative border-t border-line px-4 pb-5 pt-5 sm:absolute sm:inset-x-0 sm:bottom-0 sm:border-t-0 sm:px-5 sm:pb-5 sm:pt-0">
+            <StyleCarousel lang={lang} />
+          </div>
+        </section>
+      </div>
+
+      {boxes.map((b) => (
+        <div class="overflow-hidden rounded-xl border border-line">
+          {/* 字体框的预览字体：Base 没有 head 插槽，放 body 里（仅本页需要）；
+              一个请求拉齐 27 个拉丁字体，中文字体不在此列。 */}
+          {b.key === "fonts" && (
+            <Fragment>
+              <link rel="preconnect" href="https://fonts.googleapis.com" />
+              <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+              <link rel="stylesheet" href={gfUrl} />
+            </Fragment>
+          )}
+          <section class="relative overflow-hidden sm:aspect-video">
+            <img
+              src={b.bg}
+              alt=""
+              aria-hidden="true"
+              width="1920"
+              height="1080"
+              loading="lazy"
+              decoding="async"
+              class="relative block aspect-video w-full object-contain sm:absolute sm:inset-0 sm:h-full sm:w-full sm:object-cover"
+            />
+            <div
+              class={`absolute inset-0 hidden sm:block ${b.side === "left" ? "bg-gradient-to-r" : "bg-gradient-to-l"} from-white/75 via-white/25 to-transparent`}
+              aria-hidden="true"
+            ></div>
+            <div class={`relative p-5 sm:absolute sm:top-0 ${b.side === "left" ? "sm:left-0" : "sm:right-0"} ${b.titleCls} sm:p-6 lg:p-8`}>
+              <div class="flex flex-wrap items-baseline gap-3">
+                <h2 class="text-xl font-bold tracking-tight">
+                  <a href={b.href} class="hover:underline underline-offset-4">{b.title}</a>
+                </h2>
+                <a
+                  href={b.href}
+                  class="ml-auto rounded-md bg-primary px-4 py-2 text-sm font-semibold text-onprimary transition-opacity hover:opacity-90"
+                >
+                  {b.button}
+                </a>
+              </div>
+              <p class="mt-3 max-w-2xl text-[15px] leading-relaxed text-ink2">{b.desc}</p>
+            </div>
+            <div class="relative border-t border-line px-4 pb-5 pt-5 sm:absolute sm:inset-x-0 sm:bottom-0 sm:border-t-0 sm:px-5 sm:pb-5 sm:pt-0">
+              <SectionCarousel lang={lang} label={b.carouselLabel} direction={b.direction} variant={b.variant} cards={b.cards} />
+            </div>
+          </section>
+        </div>
+      ))}
+    </div>
+
+    <!-- 为 AI 接入：安静的次级入口。 -->
+    <p class="mt-14 border-t border-line pt-5 text-sm text-ink2">
+      {d.library.forAi}：{" "}
+      <a class="underline underline-offset-4 hover:text-ink" href="/registry.json">registry.json</a> ·{" "}
+      <a class="underline underline-offset-4 hover:text-ink" href="/llms.txt">llms.txt</a> ·{" "}
+      <a class="underline underline-offset-4 hover:text-ink" href={lp(lang, "/skills")}>{en ? "Get the skill" : "skills 下载"}</a>
+    </p>
+  </div>
+</Base>

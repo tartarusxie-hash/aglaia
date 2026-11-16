@@ -1,0 +1,107 @@
+---
+import Base from "../layouts/Base.astro";
+import { lp, nameOf, type Lang } from "../lib/i18n";
+import { patterns, entries, scenes, entriesOfPattern } from "../lib/content";
+import { patternHref } from "../lib/links";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const en = lang === "en";
+// 暂无条目的模式：如实算出来的缺口，不手工写死。
+const emptyPatterns = patterns.filter((p) => entriesOfPattern(p.id).length === 0);
+const harmonyCount = entries.filter((e) => (e.platforms || []).includes("harmonyos")).length;
+---
+
+<Base lang={lang} title={en ? "Community" : "社区"} description={en ? "Aglaia is a co-creation community: bring your effects, interactions and UI/UX work, and help the library grow." : "阿格莱亚是共创型社区：把你的动效、交互与 UI/UX 作品带进来，和大家一起把资源库做大。"} current="community">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10">
+    <h1 class="text-3xl font-bold tracking-tight">{en ? "Community" : "社区"}</h1>
+    <p class="mt-3 max-w-2xl leading-relaxed text-ink2">
+      {en
+        ? "Aglaia is a co-creation community. The library grows because people bring their own work in — an effect, an interaction, a UI/UX case — and share it with everyone."
+        : "阿格莱亚是共创型社区。资源库是靠大家把自己的作品带进来才长大的——一个动效、一次交互、一个 UI/UX 案例，拿出来和所有人共享。"}
+    </p>
+
+    <h2 class="mt-12 text-xl font-bold">{en ? "How to contribute" : "贡献指南"}</h2>
+    <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="rounded-lg border border-line bg-surface p-5">
+        <div class="font-semibold">{en ? "What to bring" : "带什么来"}</div>
+        <p class="mt-2 text-sm leading-relaxed text-ink2">
+          {en
+            ? "Effects, interactions, UI/UX cases, components and prompt flows — anything that helps someone describe a design to an AI."
+            : "动效、交互、UI/UX 案例、组件、提示词——凡是能帮人把设计说给 AI 听的东西，都欢迎。"}
+        </p>
+      </div>
+      <div class="rounded-lg border border-line bg-surface p-5">
+        <div class="font-semibold">{en ? "Keep it clean" : "来路要干净"}</div>
+        <p class="mt-2 text-sm leading-relaxed text-ink2">
+          {en
+            ? "Your own work, or open material with its source and license clearly stated. We check the license before anything is listed."
+            : "自己的作品，或者注明来源与许可的公开素材。收录之前，我们会先核对许可。"}
+        </p>
+      </div>
+      <div class="rounded-lg border border-line bg-surface p-5">
+        <div class="font-semibold">{en ? "Say what it is for" : "说清它是干什么的"}</div>
+        <p class="mt-2 text-sm leading-relaxed text-ink2">
+          {en
+            ? "A plain-language note — where it is used, what it does — matters as much as the work itself. Beginners read that first."
+            : "用大白话写清它用在哪、是干什么的，这和作品本身一样重要——新手先读这句。"}
+        </p>
+      </div>
+    </div>
+
+    <h2 class="mt-12 text-xl font-bold">{en ? "What we're missing most" : "我们最缺什么"}</h2>
+    <p class="mt-3 max-w-2xl leading-relaxed text-ink2">
+      {en
+        ? "These shelves are still empty or thin. If you have work in one of them, it is exactly what we need."
+        : "下面这些格子还是空的，或者只有一两条。如果你手里正好有这方面的作品，那就是我们最需要的。"}
+    </p>
+    <div class="mt-4 flex flex-wrap gap-2">
+      {emptyPatterns.map((p) => (
+        <a href={patternHref(lang, p.id)} class="rounded-md border border-line bg-surface px-3 py-2 text-sm hover:border-linestrong transition-colors">
+          {nameOf(lang, p)}
+        </a>
+      ))}
+    </div>
+    <ul class="mt-4 max-w-2xl list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-ink2">
+      <li>
+        {en
+          ? <>HarmonyOS components: only {harmonyCount} so far. The HarmonyOS shelf is nearly empty — self-drawn schematics and spec notes welcome.</>
+          : <>鸿蒙组件：目前只有 {harmonyCount} 条。鸿蒙这一格几乎还是空的，自绘示意与规范要点都欢迎。</>}
+      </li>
+      <li>
+        {en
+          ? <>Scene prompts: only {scenes.length} whole-page flows so far — more real pages, more coverage.</>
+          : <>场景提示词：整页级提示词目前只有 {scenes.length} 条，真实页面越多，覆盖越全。</>}
+      </li>
+    </ul>
+
+    <h2 class="mt-12 text-xl font-bold">{en ? "Contributors" : "贡献者墙"}</h2>
+    <div class="mt-4 rounded-lg border border-dashed border-linestrong bg-surface p-8 text-center">
+      <p class="text-lg font-semibold">{en ? "The first co-creators are yet to arrive." : "第一批共创者，虚位以待。"}</p>
+      <p class="mt-2 text-sm leading-relaxed text-ink2">
+        {en
+          ? "When contributions start coming in, the people behind them will be named here."
+          : "等作品开始进来，背后的人就会出现在这里。"}
+      </p>
+    </div>
+
+    <h2 class="mt-12 text-xl font-bold">{en ? "How to submit" : "投稿通道"}</h2>
+    <div class="mt-4 max-w-2xl space-y-3 leading-relaxed text-ink2">
+      <p>
+        {en
+          ? "The account system is under construction; the upload channel will open with it."
+          : "账号系统正在建设中，上传通道会随账号一起上线。"}
+      </p>
+      <p>
+        {en
+          ? "GitHub pull-request submissions will open after the official launch."
+          : "GitHub PR 投稿将在正式上线后开放。"}
+      </p>
+      <p>
+        <a class="rounded-md bg-primary px-5 py-3 font-semibold text-onprimary hover:opacity-90 transition-opacity inline-block" href={lp(lang, "/account")}>
+          {en ? "See what accounts will do →" : "看看账号能做什么 →"}
+        </a>
+      </p>
+    </div>
+  </div>
+</Base>

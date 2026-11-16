@@ -1,0 +1,9 @@
+---
+import LabPage from "../../../views/LabPage.astro";
+import { labs } from "../../../lib/content";
+export function getStaticPaths() {
+  return labs.map((item) => ({ params: { id: item.id }, props: { item } }));
+}
+const { item } = Astro.props;
+---
+<LabPage lang="zh" item={item} />

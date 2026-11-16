@@ -1,0 +1,61 @@
+---
+import { dict, nameOf, summaryOf, type Lang } from "../lib/i18n";
+import { disciplines, principles, labs, checklist } from "../lib/content";
+import { PRINCIPLE_GROUPS, DISCIPLINES, L2 } from "../lib/taxonomy";
+import { itemHref } from "../lib/links";
+import LibraryShell from "../components/LibraryShell.astro";
+import RowEntry from "../components/RowEntry.astro";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = dict(lang);
+const en = lang === "en";
+// 左侧索引：按指南类型分组（现有 guide_type 字段）。
+const groups = [
+  { key: "discipline", label: d.learn.disciplines, count: disciplines.length },
+  { key: "principle", label: d.learn.principles, count: principles.length },
+  { key: "lab", label: d.learn.lab, count: labs.length },
+  ...(checklist ? [{ key: "checklist", label: d.learn.checklist, count: 1 }] : []),
+];
+// 展示顺序：学科导览 → 原则（按尼尔森 / UX 定律 / 格式塔分组）→ 动手仪器 → 评审清单；序号是全局编号。
+const groupOrder = Object.keys(PRINCIPLE_GROUPS);
+const orderedPrinciples = [...principles].sort(
+  (a, b) => groupOrder.indexOf(a.group || "") - groupOrder.indexOf(b.group || "") || a.id.localeCompare(b.id)
+);
+const ordered = [
+  ...disciplines.map((g) => ({ item: g, cat: "discipline", catEn: "Discipline", meta: g.discipline && DISCIPLINES[g.discipline] ? L2(lang, DISCIPLINES[g.discipline]) : "" })),
+  ...orderedPrinciples.map((g) => ({ item: g, cat: "principle", catEn: "Principle", meta: g.group && PRINCIPLE_GROUPS[g.group] ? L2(lang, PRINCIPLE_GROUPS[g.group]) : "" })),
+  ...labs.map((g) => ({ item: g, cat: "lab", catEn: "Lab", meta: g.discipline && DISCIPLINES[g.discipline] ? L2(lang, DISCIPLINES[g.discipline]) : "" })),
+  ...(checklist ? [{ item: checklist, cat: "checklist", catEn: "Checklist", meta: "" }] : []),
+];
+const pad = (n: number) => String(n).padStart(3, "0");
+---
+
+{/* 头图：她在左读书，标题放右；书右缘实测约 55.3%，标题块限宽 40%（留约 5% 安全距离）。 */}
+<LibraryShell
+  lang={lang}
+  section="learn"
+  title={en ? "Learn" : "学设计"}
+  hero={{ src: "/brand/sections/learn-bg.webp", side: "right", maxWidthClass: "sm:max-w-[40%]" }}
+  intro={en
+    ? "Names get you started; principles make your judgement better — otherwise you can only nod at whatever AI gives you. This is the classroom: learn the disciplines, then the principles, then verify by hand. 36 entries: four discipline guides, 27 principles, four hands-on instruments, and one review checklist. Principles are grouped by Nielsen, UX laws, and Gestalt, each with its sources noted."
+    : "查名字是入门，懂原则才能判断 AI 做得好不好——不然它给什么你都只能点头。学设计是本站的课堂：先懂学科，再懂原则，最后上手验证。这里收录 36 篇：四门学科导览、27 条设计原则、四台能动手玩的仪器、一份评审清单。原则按尼尔森、UX 定律与格式塔分组，每条都注明来源。"}
+  groups={groups}
+  total={ordered.length}
+  paged
+>
+  <ul>
+    {ordered.map(({ item, cat, catEn, meta }, i) => (
+      <RowEntry
+        lang={lang}
+        no={pad(i + 1)}
+        catEn={catEn}
+        title={nameOf(lang, item)}
+        summary={summaryOf(lang, item)}
+        meta={meta}
+        href={itemHref(lang, item)}
+        cat={cat}
+      />
+    ))}
+  </ul>
+</LibraryShell>

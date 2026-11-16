@@ -1,0 +1,19 @@
+---
+// 资源库详情页顶部：只留泡泡轨道作导航。
+// 用户 2026-11-15：返回键与面包屑全删，导航只靠轨道（「全部」常驻轨道内，
+// 点分区名即回该分区索引）。trail 参数保留（调用方仍传），暂不用作展示。
+import type { Lang } from "../lib/i18n";
+import LibraryTrack from "./LibraryTrack.astro";
+import type { LibrarySection } from "../lib/library";
+
+interface Props {
+  lang: Lang;
+  section: LibrarySection;
+  /** 面包屑尾部（已不再展示，保留参数免改各调用方）。 */
+  trail: { label: string; href?: string }[];
+}
+
+const { lang, section } = Astro.props;
+---
+
+<LibraryTrack lang={lang} active={section} />

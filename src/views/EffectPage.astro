@@ -1,0 +1,173 @@
+---
+import Base from "../layouts/Base.astro";
+import { dict, nameOf, type Lang } from "../lib/i18n";
+import { get, effectPrompt, type Item } from "../lib/content";
+import LibraryCrumb from "../components/LibraryCrumb.astro";
+import TagRow from "../components/TagRow.astro";
+import { promptHref } from "../lib/links";
+import { INTERACTIVE_EFFECTS, STATIC_EFFECTS, STATIC_EFFECT_CODES, GLASS_BGS, effectDefaults, sandboxDoc } from "../lib/effects-data.mjs";
+
+interface Props { lang: Lang; item: Item }
+const { lang, item } = Astro.props;
+const d = dict(lang);
+const idef: any = (INTERACTIVE_EFFECTS as any)[item.id];
+const sdef: any = (STATIC_EFFECTS as any[]).find((s) => s.id === item.id);
+const isInteractive = Boolean(idef);
+const defaults = isInteractive ? effectDefaults(idef) : {};
+const isGlass = item.id === "glassmorphism";
+const initialBg = isGlass ? (GLASS_BGS as any[])[0] : null;
+const initialDoc = isInteractive
+  ? idef.doc(defaults, initialBg?.css || "")
+  : sandboxDoc(sdef?.docHtml || "", sdef?.docCss || "");
+const initialCodes = isInteractive ? idef.codes(defaults) : (STATIC_EFFECT_CODES as any)[item.id] || {};
+const prompt = effectPrompt(item.id);
+const applies = (item.applies_to || []).map((id) => get(id)).filter(Boolean);
+const targets = ["html-css", "tailwind", "react"] as const;
+const payload = { id: item.id, interactive: isInteractive, defaults };
+---
+
+<Base lang={lang} title={nameOf(lang, item)} description={item.summary_zh} current="effects">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10">
+    <LibraryCrumb lang={lang} section="effects" trail={[{ label: isInteractive ? d.effect.interactive : d.effect.static }, { label: nameOf(lang, item) }]} />
+    <h1 class="mt-8 text-3xl font-bold tracking-tight">{nameOf(lang, item)}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink2">{lang === "en" ? item.description : item.summary_zh}</p>
+    <div class="mt-4"><TagRow lang={lang} item={item} /></div>
+
+    <section class="mt-8">
+      <h2 class="text-xl font-bold">{d.effect.preview}</h2>
+      <div class="mt-3 overflow-hidden rounded-lg border border-linestrong bg-surface">
+        <iframe id="fx-frame" title={nameOf(lang, item)} sandbox="allow-scripts" srcdoc={initialDoc} class="h-[340px] w-full border-0 bg-bg" loading="lazy"></iframe>
+      </div>
+      <p id="fx-fallback" class="mt-2 hidden rounded-md border border-line bg-subtle px-3 py-2 text-sm text-ink2">
+        {lang === "en" ? "The preview is taking long to load — the code below still works; copy it into any HTML file to see the effect." : "预览加载有点久——下方代码仍然可用，复制到任意 HTML 文件即可看到效果。"}
+      </p>
+
+      {isGlass && (
+        <div class="mt-4 flex flex-wrap items-center gap-2">
+          <span class="text-sm font-medium">{d.effect.bg}：</span>
+          {(GLASS_BGS as any[]).map((b, i) => (
+            <button data-bg={b.id} class={`fx-bg-btn rounded-full border px-3.5 py-1.5 text-sm transition-colors ${i === 0 ? "border-ink bg-ink text-bg" : "border-linestrong hover:bg-subtle"}`}>{lang === "en" ? b.name_en : b.name_zh}</button>
+          ))}
+        </div>
+      )}
+
+      {isInteractive && (
+        <div class="mt-5 grid gap-4 rounded-lg border border-line bg-subtle p-4 sm:grid-cols-2 lg:grid-cols-4" id="fx-params">
+          {idef.params.map((p: any) => (
+            <label class="block">
+              <span class="flex items-baseline justify-between text-sm font-medium">
+                <span>{lang === "en" ? p.label_en : p.label_zh}</span>
+                <span class="font-mono text-xs text-muted" data-val-for={p.name}>{defaults[p.name]}{p.unit || ""}</span>
+              </span>
+              {p.kind === "select" ? (
+                <select data-fx-param={p.name} class="mt-1.5 w-full rounded-md border border-linestrong bg-surface px-2.5 py-2 text-sm">
+                  {p.options.map((o: string) => <option value={o} selected={o === defaults[p.name]}>{(p.label_options && p.label_options[o]) || o}</option>)}
+                </select>
+              ) : (
+                <input data-fx-param={p.name} type="range" min={p.min} max={p.max} step={p.step} value={defaults[p.name]} class="mt-2 w-full accent-[#141414]" />
+              )}
+            </label>
+          ))}
+        </div>
+      )}
+    </section>
+
+    <section class="mt-10">
+      <div class="flex flex-wrap items-center gap-2">
+        <h2 class="text-xl font-bold">{d.effect.code}</h2>
+        <div class="ml-auto flex gap-1.5" role="tablist">
+          {targets.map((t, i) => (
+            <button data-code-tab={t} class={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${i === 0 ? "border-ink bg-ink text-bg" : "border-linestrong hover:bg-subtle"}`}>{t}</button>
+          ))}
+        </div>
+      </div>
+      {targets.map((t, i) => (
+        <div data-code-panel={t} class={i === 0 ? "" : "hidden"}>
+          <pre class="mt-3 max-h-[440px] overflow-auto rounded-lg border border-line bg-surface p-4 font-mono text-[12.5px] leading-relaxed"><code data-code={t}>{initialCodes[t] || ""}</code></pre>
+        </div>
+      ))}
+      <p class="mt-2 text-xs text-muted">{lang === "en" ? "Code snippets are MIT-licensed — copy and adapt freely." : "代码片段以 MIT 释出，可自由复制改用。"}</p>
+    </section>
+
+    <section class="mt-10 max-w-3xl">
+      <h2 class="text-xl font-bold">{d.effect.breakdown}</h2>
+      <div class="prose-aglaia mt-2" set:html={item.html} />
+    </section>
+
+    {prompt && (
+      <section class="mt-10 max-w-3xl">
+        <h2 class="text-xl font-bold">{d.effect.prompt}</h2>
+        <a href={promptHref(lang, prompt.id)} class="mt-3 flex items-center justify-between rounded-lg border border-linestrong bg-surface px-4 py-3 font-medium hover:bg-subtle transition-colors">
+          <span>{nameOf(lang, prompt)}</span><span class="text-sm text-muted">{prompt.status === "stale" ? d.misc.stale + " · " : ""}→</span>
+        </a>
+      </section>
+    )}
+
+    {applies.length > 0 && (
+      <section class="mt-10 max-w-3xl">
+        <h2 class="text-xl font-bold">{d.effect.appliesTo}</h2>
+        <div class="mt-3 flex flex-wrap gap-2">{applies.map((a) => <span class="rounded-full border border-line px-3 py-1.5 text-sm">{nameOf(lang, a!)}</span>)}</div>
+      </section>
+    )}
+  </div>
+
+  <script type="application/json" id="fx-data" set:html={JSON.stringify(payload).replace(/<\//g, "<\\/")}></script>
+  <script>
+    import { INTERACTIVE_EFFECTS, STATIC_EFFECT_CODES, GLASS_BGS } from "../lib/effects-data.mjs";
+    const data = JSON.parse(document.getElementById("fx-data")?.textContent || "{}");
+    const frame = document.getElementById("fx-frame") as HTMLIFrameElement | null;
+    const fallback = document.getElementById("fx-fallback");
+    let loaded = false;
+    frame?.addEventListener("load", () => { loaded = true; });
+    setTimeout(() => { if (!loaded) fallback?.classList.remove("hidden"); }, 3500);
+
+    // 代码选项卡
+    const tabs = document.querySelectorAll("[data-code-tab]");
+    tabs.forEach((tab) => tab.addEventListener("click", () => {
+      const t = (tab as HTMLElement).dataset.codeTab;
+      tabs.forEach((x) => x.className = "rounded-full border px-3.5 py-1.5 text-sm transition-colors border-linestrong hover:bg-subtle");
+      tab.className = "rounded-full border px-3.5 py-1.5 text-sm transition-colors border-ink bg-ink text-bg";
+      document.querySelectorAll("[data-code-panel]").forEach((p) => p.classList.toggle("hidden", (p as HTMLElement).dataset.codePanel !== t));
+    }));
+
+    if (data.interactive) {
+      const def = (INTERACTIVE_EFFECTS as any)[data.id];
+      const state: Record<string, string> = { ...(data.defaults || {}) };
+      let bgCss = data.id === "glassmorphism" ? (GLASS_BGS as any[])[0].css : "";
+      let timer: any = null;
+      const render = () => {
+        if (frame && def) frame.srcdoc = def.doc(state, bgCss);
+        if (def) {
+          const codes = def.codes(state);
+          document.querySelectorAll("[data-code]").forEach((el) => {
+            const k = (el as HTMLElement).dataset.code || "";
+            if (codes[k] != null) el.textContent = codes[k];
+          });
+        }
+      };
+      const schedule = () => { clearTimeout(timer); timer = setTimeout(render, 120); };
+      document.querySelectorAll("[data-fx-param]").forEach((el) => {
+        const input = el as HTMLInputElement;
+        const sync = () => {
+          state[input.dataset.fxParam || ""] = input.value;
+          const defParam = def.params.find((p: any) => p.name === input.dataset.fxParam);
+          const label = document.querySelector(`[data-val-for="${input.dataset.fxParam}"]`);
+          if (label) label.textContent = input.value + (defParam?.unit || "");
+          schedule();
+        };
+        input.addEventListener("input", sync);
+        input.addEventListener("change", sync);
+      });
+      document.querySelectorAll(".fx-bg-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const b = (GLASS_BGS as any[]).find((x) => x.id === (btn as HTMLElement).dataset.bg);
+          if (!b) return;
+          bgCss = b.css;
+          document.querySelectorAll(".fx-bg-btn").forEach((x) => (x.className = "fx-bg-btn rounded-full border px-3.5 py-1.5 text-sm transition-colors border-linestrong hover:bg-subtle"));
+          btn.className = "fx-bg-btn rounded-full border px-3.5 py-1.5 text-sm transition-colors border-ink bg-ink text-bg";
+          render();
+        });
+      });
+    }
+  </script>
+</Base>

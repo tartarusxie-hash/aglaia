@@ -1,0 +1,143 @@
+---
+// 艺术风格库详情页（/styles/，中文）：总览 + 五类筛选。
+// 用户 2026-11-15：原来每篇一行的大卡片太大，改成一行 5 张的小卡片
+// （桌面 5 列，平板 3 列，手机 2 列），定义只留在详情页，卡上只留
+// 变身图 + 风格名 + 年代产地，紧凑不留大空白。39 篇 ÷ 5 列 ≈ 8 行。
+// 不用翻转卡片、不用双击——用户 2026-11-13 定。
+// 用户 2026-11-16：分类改成左侧导览栏（与组件/效果等分区同一标准，
+// LibraryShell 的侧栏做法），横排 pills 废除；列数随侧栏收窄：
+// 手机 2 列、平板 3 列、桌面 lg 4 列、xl 5 列（与组件页一致）。
+import Base from "../layouts/Base.astro";
+import LibraryTrack from "../components/LibraryTrack.astro";
+import { dict } from "../lib/i18n";
+import { STYLES, STYLE_CATEGORIES } from "../lib/styles-data";
+
+const d = dict("zh");
+
+const counts = new Map<string, number>();
+for (const s of STYLES) counts.set(s.category, (counts.get(s.category) || 0) + 1);
+const countOf = (key: string) => (key === "all" ? STYLES.length : counts.get(key) || 0);
+---
+
+<Base lang="zh" title="艺术风格" description="39 个艺术流派，从印象派到 Frutiger Aero。每篇都有阿格莱亚的变身形象、给 AI 的第一个 prompt，和一张机器可用的风格卡。" current="styles">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-8 pb-16">
+    {/*
+      分区头图（用户 2026-11-15 晚）：背景图换成阿格莱亚在右侧的那张（与首页第三页、
+      资源库艺术风格框同一张，1920×1080，她在右、左侧大面积留空），大标题放左侧。
+      框的宽高比 = 图的 16:9，整图完整可见不裁头；标题块限宽 46%（画笔尖在框宽约 56% 处）。
+      用户 2026-11-16：标题块垂直居中（原先贴顶，留白太多像未完成），简介加大到
+      text-lg + leading-loose，并说清为什么设这个分区、收录了什么与多少。
+      手机端图是通栏带、标题在图下白底上（窄屏叠放会盖住她）。
+    */}
+    <header class="relative overflow-hidden rounded-xl border border-line sm:aspect-video">
+      <img
+        src="/brand/styles/art-styles-bg-right.webp"
+        alt=""
+        aria-hidden="true"
+        width="1920"
+        height="1080"
+        loading="eager"
+        decoding="async"
+        class="relative block aspect-video w-full object-contain sm:absolute sm:inset-0 sm:h-full sm:w-full sm:object-cover"
+      />
+      <div class="absolute inset-0 hidden bg-gradient-to-r from-white/75 via-white/25 to-transparent sm:block" aria-hidden="true"></div>
+      <div class="relative p-5 sm:absolute sm:left-0 sm:top-1/2 sm:-translate-y-1/2 sm:max-w-[46%] sm:p-6 lg:p-8">
+        <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">艺术风格</h1>
+        <p class="mt-4 max-w-2xl text-lg leading-loose text-ink2">
+          美学百科全书的第一层。许多 vibecoder 做视觉设计时忽略整体风格定义，这是『AI 感』的罪魁祸首之一——风格得先立起来，再谈组件与效果。这里收录 39 个流派，分属五个时期：19 世纪末到 20 世纪初 6 个、20 世纪上半叶 10 个、20 世纪中后期 11 个、数字时代 8 个、非西方美学 4 个。每篇都有阿格莱亚的变身形象、跟 AI 说这个风格的第一句话，和一张机器可用的风格卡。点任意一张卡片进去看整篇。
+        </p>
+      </div>
+    </header>
+
+    <LibraryTrack lang="zh" active="styles" />
+
+    <div class="mt-8 flex flex-col gap-8 lg:flex-row">
+      <!-- 左侧索引栏：与 LibraryShell 同一做法（桌面粘性边栏，移动端横向滚动条）。 -->
+      <aside class="lg:w-[220px] lg:shrink-0">
+        <div class="lg:sticky lg:top-24">
+          <div class="flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0" role="group" aria-label="风格分类">
+            {STYLE_CATEGORIES.map((c) => (
+              <button
+                type="button"
+                data-style-filter={c.key}
+                aria-pressed={c.key === "all" ? "true" : "false"}
+                class="style-filter-btn flex shrink-0 items-center justify-between gap-3 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-subtle"
+              >
+                <span>{c.zh}</span>
+                <span class="text-muted">{countOf(c.key)}</span>
+              </button>
+            ))}
+          </div>
+          <p class="mt-5 hidden border-t border-line pt-4 text-sm lg:block">
+            <a href="/skills" class="text-ink2 hover:text-ink hover:underline underline-offset-4">{d.library.forAi} →</a>
+          </p>
+        </div>
+      </aside>
+
+      <div class="min-w-0 flex-1">
+        <p data-style-count class="text-sm text-muted" aria-live="polite">共 {STYLES.length} 篇</p>
+        <div class="mt-5 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {STYLES.map((s, i) => (
+            <a href={`/styles/${s.id}/`} data-style-row data-cat={s.category} class="group block">
+              <div class="overflow-hidden rounded-xl">
+                <img
+                  src={`/brand/styles/${s.id}-bg.webp`}
+                  alt={`阿格莱亚变身${s.nameZh}`}
+                  width="1920"
+                  height="1080"
+                  loading={i < 5 ? "eager" : "lazy"}
+                  decoding="async"
+                  class="aspect-video w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02]"
+                />
+              </div>
+              <div class="mt-2.5">
+                <h3 class="font-bold tracking-tight group-hover:underline underline-offset-4">{s.nameZh}</h3>
+                <p class="mt-0.5 text-xs text-muted">{s.nameEn}</p>
+                <p class="mt-0.5 text-xs text-muted">{s.years} · {s.origin}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+
+        <p data-style-empty class="mt-8 hidden rounded-lg border border-line bg-subtle p-5 text-ink2">这一类还没有条目。</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const rows = Array.from(document.querySelectorAll("[data-style-row]"));
+    const btns = Array.from(document.querySelectorAll("[data-style-filter]"));
+    const countEl = document.querySelector("[data-style-count]");
+    const emptyEl = document.querySelector("[data-style-empty]");
+    const valid = new Set(btns.map((b) => b.getAttribute("data-style-filter") || ""));
+    const params = new URLSearchParams(location.search);
+    let cat = params.get("cat") || "all";
+    if (!valid.has(cat)) cat = "all";
+
+    function apply() {
+      let n = 0;
+      rows.forEach((row) => {
+        const show = cat === "all" || row.getAttribute("data-cat") === cat;
+        row.style.display = show ? "" : "none";
+        if (show) n++;
+      });
+      emptyEl?.classList.toggle("hidden", n !== 0);
+      if (countEl) countEl.textContent = `共 ${n} 篇`;
+      btns.forEach((b) => {
+        const on = (b.getAttribute("data-style-filter") || "") === cat;
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+        b.classList.toggle("bg-subtle", on);
+        b.classList.toggle("font-medium", on);
+      });
+      const url = new URL(location.href);
+      if (cat !== "all") url.searchParams.set("cat", cat); else url.searchParams.delete("cat");
+      history.replaceState(null, "", url);
+    }
+
+    btns.forEach((b) => b.addEventListener("click", () => {
+      cat = b.getAttribute("data-style-filter") || "all";
+      apply();
+    }));
+    apply();
+  </script>
+</Base>

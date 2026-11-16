@@ -1,0 +1,9 @@
+---
+import EffectPage from "../../../views/EffectPage.astro";
+import { effects } from "../../../lib/content";
+export function getStaticPaths() {
+  return effects.map((item) => ({ params: { id: item.id }, props: { item } }));
+}
+const { item } = Astro.props;
+---
+<EffectPage lang="en" item={item} />

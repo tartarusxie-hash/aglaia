@@ -1,0 +1,66 @@
+---
+import { dict, nameOf, summaryOf, type Lang } from "../lib/i18n";
+import { prompts, scenes } from "../lib/content";
+import { FUNCTIONS, L2 } from "../lib/taxonomy";
+import { promptHref } from "../lib/links";
+import LibraryShell from "../components/LibraryShell.astro";
+import RowEntry from "../components/RowEntry.astro";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = dict(lang);
+const en = lang === "en";
+const comp = prompts.filter((p) => p.level === "component");
+// 左侧索引：场景级（现有 level 字段）+ 按功能分组（现有 function 字段，与旧版分组一致）。
+const byFn = new Map<string, typeof comp>();
+for (const p of comp) {
+  const k = p.function || "assets";
+  if (!byFn.has(k)) byFn.set(k, []);
+  byFn.get(k)!.push(p);
+}
+const fnOrder = Object.keys(FUNCTIONS);
+const groups = [
+  { key: "scene", label: d.misc.sceneLevel, count: scenes.length },
+  ...[...byFn.entries()]
+    .sort((a, b) => fnOrder.indexOf(a[0]) - fnOrder.indexOf(b[0]))
+    .map(([fn, items]) => ({ key: fn, label: L2(lang, FUNCTIONS[fn] || { zh: fn, en: fn }), count: items.length })),
+];
+// 展示顺序与旧版一致：场景级在前，组件级按功能组排；序号是全局编号，过滤后不变。
+const ordered = [
+  ...scenes.map((s) => ({ item: s, cat: "scene", catEn: "Scene" })),
+  ...[...byFn.entries()]
+    .sort((a, b) => fnOrder.indexOf(a[0]) - fnOrder.indexOf(b[0]))
+    .flatMap(([fn, items]) => items.map((p) => ({ item: p, cat: fn, catEn: (FUNCTIONS[fn] || { en: fn }).en }))),
+];
+const pad = (n: number) => String(n).padStart(3, "0");
+---
+
+{/* 头图：她在左，对话框在右；对话框右缘实测约 52.1%，标题放右、限宽 42%（留约 6% 安全距离）。 */}
+<LibraryShell
+  lang={lang}
+  section="prompts"
+  title={en ? "Prompts" : "提示词"}
+  hero={{ src: "/brand/sections/prompts-bg.webp", side: "right", maxWidthClass: "sm:max-w-[42%]" }}
+  intro={en
+    ? "Naming the parts isn't enough — you still have to say it to AI. This library translates every component, effect, and scene into the first sentence AI can understand: 77 prompts, 67 component-level and 10 scene-level, all written to a seven-part template with fill-in parameters. Scene prompts compose whole pages by referencing component ones. Anything not yet run against a live model is honestly labelled 'Stale'."
+    : "知道名字还不够——还得会跟 AI 说。提示词库就是把每个组件、每种效果、每个场景，翻译成 AI 听得懂的第一句话。这里收录 77 条提示词：67 条组件级、10 条场景级，全部按七段式模板写成，带填空参数；场景级引用组件级拼出整页。还没用真实模型跑过的，如实标「待复验」，不冒充验证过。"}
+  groups={groups}
+  total={ordered.length}
+  paged
+>
+  <ul>
+    {ordered.map(({ item, cat, catEn }, i) => (
+      <RowEntry
+        lang={lang}
+        no={pad(i + 1)}
+        catEn={catEn}
+        title={nameOf(lang, item)}
+        summary={summaryOf(lang, item)}
+        meta={`v${item.version || "1.0.0"} · ${(item.targets || []).join(" / ")}`}
+        href={promptHref(lang, item.id)}
+        stale={item.status === "stale"}
+        cat={cat}
+      />
+    ))}
+  </ul>
+</LibraryShell>

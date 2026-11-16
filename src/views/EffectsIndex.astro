@@ -1,0 +1,39 @@
+---
+import { dict, type Lang } from "../lib/i18n";
+import { effects } from "../lib/content";
+import LibraryShell from "../components/LibraryShell.astro";
+import EffectCard from "../components/EffectCard.astro";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = dict(lang);
+const en = lang === "en";
+const interactive = effects.filter((e) => e.interactive);
+const statik = effects.filter((e) => !e.interactive);
+// 左侧索引：可交互 / 静态（现有 interactive 字段）。
+const groups = [
+  { key: "interactive", label: d.effect.interactive, count: interactive.length },
+  { key: "static", label: d.effect.static, count: statik.length },
+];
+---
+
+{/* 头图：她在右，标题放左；环绕光带左缘实测约 39.9%，标题块限宽 36%（留约 4% 安全距离）。 */}
+<LibraryShell
+  lang={lang}
+  section="effects"
+  title={en ? "Effects" : "效果"}
+  hero={{ src: "/brand/sections/effects-bg.webp", side: "left", maxWidthClass: "sm:max-w-[36%]" }}
+  intro={en
+    ? "Components are static parts; effects are the language that makes them move — without motion and interaction, an interface is just a picture. 30 effects live here: 10 interactive (open one for a live sandbox with parameter sliders) and 20 static demos. Each has a name, a number, code in three flavors, and a matching prompt. Cards rest still until you hover or tap."
+    : "组件是静态的零件，效果是让它们动起来的语言——没有动效与交互，界面就只是一张画。这里收录 30 种效果：10 种可交互（点开有实时沙盒，能拖参数看变化），20 种静态演示。每种效果都有名字、编号、三档代码和配套提示词，卡片默认静止，悬停或点按才播放。"}
+  groups={groups}
+  total={effects.length}
+>
+  <div class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
+    {effects.map((e) => (
+      <div data-lib-item data-lib-cat={e.interactive ? "interactive" : "static"}>
+        <EffectCard lang={lang} item={e} />
+      </div>
+    ))}
+  </div>
+</LibraryShell>

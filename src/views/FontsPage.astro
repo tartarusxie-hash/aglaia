@@ -1,0 +1,247 @@
+---
+// 字体库（/fonts/，中英双语）：35 款开源免费字体，按分类分组。
+// 收录规则：只收有明确开源许可证的字体（见 src/lib/fonts-data.mjs 文件头注释）。
+// 用户 2026-11-16：加左侧导览栏（与组件/效果等分区同一标准），总览 + 五组，
+// 点选即过滤（整组显示/隐藏）并同步 URL；头图简介说清为什么设这个分区、
+// 收录了什么与多少，标题块垂直居中、字号加大。
+import Base from "../layouts/Base.astro";
+import LibraryTrack from "../components/LibraryTrack.astro";
+import { dict, lp, type Lang } from "../lib/i18n";
+import { FONTS, FONT_CATEGORIES } from "../lib/fonts-data.mjs";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const en = lang === "en";
+const d = dict(lang);
+
+const CATEGORY_ORDER = ["sans", "serif", "mono", "display", "handwriting"] as const;
+type FontCategory = (typeof CATEGORY_ORDER)[number];
+const byCategory = (cat: FontCategory) => FONTS.filter((f) => f.category === cat);
+
+// 拉丁预览字体：只给 googleFonts 非空且不含 CJK 的字体生成 Google Fonts CSS。
+// 中文字体（languages 含 cjk）只做文字卡、不加载字体文件——CJK 全量子集太大；
+// googleFonts 为 null 的三款（Hack、得意黑、霞鹜文楷）也不加载。
+// 27 个 family 合并成一条 css2 请求（weight 400 默认），浏览器只下载实际用到的文件。
+const previewFonts = FONTS.filter((f) => f.googleFonts && !f.languages.includes("cjk"));
+const gfUrl =
+  "https://fonts.googleapis.com/css2?" +
+  previewFonts.map((f) => `family=${f.googleFonts!.replaceAll(" ", "+")}`).join("&") +
+  "&display=swap";
+
+const langLabel = (code: string) =>
+  code === "cjk" ? (en ? "Chinese (CJK)" : "中文") : en ? "Latin" : "拉丁";
+const weightsLabel = (w: string | string[]) =>
+  w === "variable" ? (en ? "Variable" : "可变字重") : w.join(", ");
+const fallbackFor = (cat: string) =>
+  cat === "mono" ? "ui-monospace, monospace" : cat === "serif" ? "Georgia, serif" : "sans-serif";
+const isPreviewable = (f: (typeof FONTS)[number]) =>
+  Boolean(f.googleFonts) && !f.languages.includes("cjk");
+---
+
+<Base
+  lang={lang}
+  title={en ? "Fonts" : "字体库"}
+  description={en
+    ? "35 free, open-source fonts — every entry carries a clear open-source license. Download from each font's official page."
+    : "35 款开源免费字体，每款都有明确的开源许可证。下载请去各字体的官方页面。"}
+  current="fonts"
+>
+  {/*
+    Google Fonts 预览 CSS：Base 没有 head 插槽，link 放 body 顶部（浏览器照常加载）。
+    只含 27 个拉丁 family（见上方 previewFonts 过滤），中文字体与非 Google Fonts 字体不在其中。
+  */}
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href={gfUrl} rel="stylesheet" />
+
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-8 pb-16">
+    {/*
+      分区头图（与风格索引页同一做法，左右镜像）：她在左打字机，标题放右；
+      书桌右缘实测约 53%、打字机右缘约 50%，标题块限宽 42%（留约 7% 安全距离）。
+      用户 2026-11-16：标题块垂直居中，简介加大到 text-lg + leading-loose。
+      手机端图是通栏带、标题在图下白底上。
+    */}
+    <header class="relative overflow-hidden rounded-xl border border-line sm:aspect-video">
+      <img
+        src="/brand/sections/fonts-bg.webp"
+        alt=""
+        aria-hidden="true"
+        width="1920"
+        height="1080"
+        loading="eager"
+        decoding="async"
+        class="relative block aspect-video w-full object-contain sm:absolute sm:inset-0 sm:h-full sm:w-full sm:object-cover"
+      />
+      <div class="absolute inset-0 hidden bg-gradient-to-l from-white/75 via-white/25 to-transparent sm:block" aria-hidden="true"></div>
+      <div class="relative p-5 sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2 sm:max-w-[42%] sm:p-6 lg:p-8">
+        <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">{en ? "Fonts" : "字体库"}</h1>
+        <p class="mt-4 max-w-2xl text-lg leading-loose text-ink2">
+          {en
+            ? "Type is the easiest part of visual design to overlook — get the style and components right but the font wrong, and the whole work falls flat. This library closes that gap: only fonts with a clear open-source license, free for commercial use and redistribution. 35 typefaces: 14 sans, 6 serif, 6 mono, 4 display, 5 handwriting, 7 with Chinese support. Free-but-not-open vendor fonts are intentionally left out. Download from each font's official page."
+            : "字体是视觉设计里最容易被忽略的一环——风格定了、组件搭了，字体不对，整个作品的气质就垮了。字体库补上这一环：只收有明确开源许可证的字体，可免费商用、可自由分发。这里收录 35 款：无衬线 14、衬线 6、等宽 6、展示 4、手写 5；其中 7 款支持中文。免费但非开源的厂商定制字体，有意不收。下载请去各字体的官方页面。"}
+        </p>
+      </div>
+    </header>
+
+    <LibraryTrack lang={lang} active="fonts" />
+
+    <div class="mt-8 flex flex-col gap-8 lg:flex-row">
+      <!-- 左侧索引栏：与 LibraryShell 同一做法（桌面粘性边栏，移动端横向滚动条）。 -->
+      <aside class="lg:w-[220px] lg:shrink-0">
+        <div class="lg:sticky lg:top-24">
+          <div class="flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0" role="group" aria-label={en ? "Categories" : "分类索引"}>
+            <button
+              type="button"
+              data-font-filter="all"
+              aria-pressed="true"
+              class="font-filter-btn flex shrink-0 items-center justify-between gap-3 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-subtle"
+            >
+              <span>{d.library.all}</span>
+              <span class="text-muted">{FONTS.length}</span>
+            </button>
+            {CATEGORY_ORDER.map((cat) => (
+              <button
+                type="button"
+                data-font-filter={cat}
+                aria-pressed="false"
+                class="font-filter-btn flex shrink-0 items-center justify-between gap-3 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-subtle"
+              >
+                <span>{FONT_CATEGORIES[cat][en ? "en" : "zh"]}</span>
+                <span class="text-muted">{byCategory(cat).length}</span>
+              </button>
+            ))}
+          </div>
+          <p class="mt-5 hidden border-t border-line pt-4 text-sm lg:block">
+            <a href={lp(lang, "/skills")} class="text-ink2 hover:text-ink hover:underline underline-offset-4">{d.library.forAi} →</a>
+          </p>
+        </div>
+      </aside>
+
+      <div class="min-w-0 flex-1">
+        <p data-font-count class="text-sm text-muted" aria-live="polite">{en ? `${FONTS.length} fonts` : `共 ${FONTS.length} 款`}</p>
+        {CATEGORY_ORDER.map((cat) => {
+          const items = byCategory(cat);
+          if (items.length === 0) return null;
+          return (
+            <section class="mt-10" data-font-section={cat}>
+          <h2 class="text-2xl font-bold tracking-tight">
+            {FONT_CATEGORIES[cat][en ? "en" : "zh"]}
+            <span class="ml-2 text-base font-normal text-muted">{items.length}</span>
+          </h2>
+          <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map((f) => (
+              <article class="flex flex-col rounded-xl border border-line bg-surface p-5">
+                {isPreviewable(f) ? (
+                  <div class="min-h-[7rem]">
+                    <p class="text-2xl leading-snug tracking-tight" style={`font-family: '${f.googleFonts}', ${fallbackFor(f.category)}`}>
+                      {f.name}
+                    </p>
+                    <p class="mt-2 leading-relaxed text-ink2" style={`font-family: '${f.googleFonts}', ${fallbackFor(f.category)}`}>
+                      The quick brown fox jumps over the lazy dog 0123456789
+                    </p>
+                  </div>
+                ) : (
+                  <div class="min-h-[7rem]">
+                    <p class="text-2xl font-bold leading-snug tracking-tight">
+                      {f.nameZh ? `${f.nameZh}` : f.name}
+                    </p>
+                    <p class="mt-2 leading-relaxed text-ink2">
+                      {f.nameZh ? "设计资源库 · 以字传情" : f.name}
+                    </p>
+                    <p class="mt-1 text-xs text-muted">
+                      {en ? "System font — font file not loaded" : "系统字体显示，未加载字体文件"}
+                    </p>
+                  </div>
+                )}
+                <h3 class="mt-3 font-bold tracking-tight">
+                  {f.name}
+                  {f.nameZh && <span class="ml-2 font-normal text-ink2">{f.nameZh}</span>}
+                </h3>
+                <dl class="mt-3 space-y-1.5 text-sm leading-relaxed text-ink2">
+                  <div class="flex gap-2">
+                    <dt class="shrink-0 text-muted">{en ? "Author" : "作者"}</dt>
+                    <dd>{f.author}</dd>
+                  </div>
+                  <div class="flex gap-2">
+                    <dt class="shrink-0 text-muted">{en ? "License" : "许可证"}</dt>
+                    <dd>
+                      <a href={f.licenseUrl} target="_blank" rel="noopener" class="hover:underline underline-offset-4">
+                        {f.license} ↗
+                      </a>
+                    </dd>
+                  </div>
+                  <div class="flex gap-2">
+                    <dt class="shrink-0 text-muted">{en ? "Languages" : "语言"}</dt>
+                    <dd>{f.languages.map(langLabel).join(" · ")}</dd>
+                  </div>
+                  <div class="flex gap-2">
+                    <dt class="shrink-0 text-muted">{en ? "Weights" : "字重"}</dt>
+                    <dd>{weightsLabel(f.weights)}</dd>
+                  </div>
+                </dl>
+                <a
+                  href={f.url}
+                  target="_blank"
+                  rel="noopener"
+                  class="mt-4 inline-flex w-fit items-center gap-1 rounded-md border border-line px-3 py-1.5 text-sm font-medium hover:border-ink transition-colors"
+                >
+                  {en ? "Official download" : "官方下载"} ↗
+                </a>
+              </article>
+            ))}
+          </div>
+        </section>
+      );
+    })}
+
+        <p class="mt-12 text-sm text-muted">
+          {en
+            ? "License details were verified entry by entry on Nov 15, 2026, against each font's official repository. Free-but-not-open-source vendor fonts (Alibaba PuHuiTi, HarmonyOS Sans, OPPO Sans, MiSans and the like) are intentionally not listed."
+            : "许可证信息为 2026 年 11 月 15 日逐条核实，以各字体官方仓库为准。免费但非开源的厂商定制字体（阿里巴巴普惠体、鸿蒙字体、OPPO Sans、MiSans 等）有意不收。"}
+        </p>
+        <p class="mt-4 text-sm text-muted">
+          {en
+            ? <>New to what Aglaia is? Start with the <a class="underline underline-offset-4 hover:text-ink2" href={lp(lang, "/library")}>Library</a>.</>
+            : <>还不熟阿格莱亚？先从<a class="underline underline-offset-4 hover:text-ink2" href={lp(lang, "/library")}>资源库</a>逛一圈。</>}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 左侧导览过滤：整组显示/隐藏，点选即过滤并同步 URL（与风格页同一做法）。
+    const sections = Array.from(document.querySelectorAll("[data-font-section]"));
+    const btns = Array.from(document.querySelectorAll("[data-font-filter]"));
+    const countEl = document.querySelector("[data-font-count]");
+    const lang = document.documentElement.lang.startsWith("en") ? "en" : "zh";
+    const valid = new Set(btns.map((b) => b.getAttribute("data-font-filter") || ""));
+    const params = new URLSearchParams(location.search);
+    let cat = params.get("cat") || "all";
+    if (!valid.has(cat)) cat = "all";
+
+    function apply() {
+      let n = 0;
+      sections.forEach((s) => {
+        const show = cat === "all" || s.getAttribute("data-font-section") === cat;
+        (s as HTMLElement).style.display = show ? "" : "none";
+        if (show) n += s.querySelectorAll("article").length;
+      });
+      if (countEl) countEl.textContent = lang === "en" ? `${n} fonts` : `共 ${n} 款`;
+      btns.forEach((b) => {
+        const on = (b.getAttribute("data-font-filter") || "") === cat;
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+        b.classList.toggle("bg-subtle", on);
+        b.classList.toggle("font-medium", on);
+      });
+      const url = new URL(location.href);
+      if (cat !== "all") url.searchParams.set("cat", cat); else url.searchParams.delete("cat");
+      history.replaceState(null, "", url);
+    }
+
+    btns.forEach((b) => b.addEventListener("click", () => {
+      cat = b.getAttribute("data-font-filter") || "all";
+      apply();
+    }));
+    apply();
+  </script>
+</Base>

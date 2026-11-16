@@ -1,0 +1,66 @@
+---
+import { dict, nameOf, summaryOf, type Lang } from "../lib/i18n";
+import { resources } from "../lib/content";
+import LibraryShell from "../components/LibraryShell.astro";
+import RowEntry from "../components/RowEntry.astro";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = dict(lang);
+const en = lang === "en";
+// 左侧索引：按用途分组（现有 usage 字段；未知用途的归入"其他"，目前为 0 条）。
+const usageGroups: { key: string; zh: string; en: string }[] = [
+  { key: "library", zh: "组件库与资产库", en: "Component libraries & asset libraries" },
+  { key: "template", zh: "模板", en: "Templates" },
+  { key: "spec", zh: "设计规范", en: "Design specifications" },
+  { key: "tool", zh: "工具", en: "Tools" },
+  { key: "reference", zh: "仅参考", en: "Reference only" },
+];
+const known = new Set(usageGroups.map((g) => g.key));
+const rest = resources.filter((r) => !known.has(r.usage || ""));
+const groups = [
+  ...usageGroups
+    .map((g) => ({ key: g.key, label: en ? g.en : g.zh, count: resources.filter((r) => r.usage === g.key).length }))
+    .filter((g) => g.count > 0),
+  ...(rest.length > 0 ? [{ key: "other", label: en ? "More" : "其他", count: rest.length }] : []),
+];
+// 展示顺序：按用途组排，组内按 id；序号是全局编号，过滤后不变。
+const ordered = [
+  ...usageGroups.flatMap((g) =>
+    resources.filter((r) => r.usage === g.key).map((r) => ({ item: r, cat: g.key, catEn: g.en }))
+  ),
+  ...rest.map((r) => ({ item: r, cat: "other", catEn: "More" })),
+];
+const pad = (n: number) => String(n).padStart(3, "0");
+---
+
+{/* 头图：她在右抱书，标题放左；她左缘实测约 58.3%（胡须约 56–57%），标题块限宽 50%（留约 6% 安全距离）。 */}
+<LibraryShell
+  lang={lang}
+  section="resources"
+  title={en ? "Resources" : "资源"}
+  hero={{ src: "/brand/sections/resources-bg.webp", side: "left", maxWidthClass: "sm:max-w-[50%]" }}
+  intro={en
+    ? "Not everything good lives on this site — plenty of great materials, tools, and reference implementations are scattered across the open-source world. This library is their index: nothing bundled, every entry names its original site and license, and every link goes to the source. 67 resources, from design systems and icon sets to motion libraries, inspiration galleries, and reference implementations."
+    : "不是所有好东西都在本站——很多值得用的素材、工具和参考实现散落在开源世界里。资源库就是它们的目录：只收录、不打包，每条都标明原站与许可证，点进去就是原站。这里收录 67 条资源，涵盖设计系统、图标库、动效库、灵感画廊与参考实现。"}
+  note={d.resources.note}
+  groups={groups}
+  total={resources.length}
+  paged
+>
+  <ul>
+    {ordered.map(({ item, cat, catEn }, i) => (
+      <RowEntry
+        lang={lang}
+        no={pad(i + 1)}
+        catEn={catEn}
+        title={nameOf(lang, item)}
+        summary={summaryOf(lang, item)}
+        meta={[item.license?.spdx || "", item.license?.author || "", lang !== "en" ? item.fee_note_zh || "" : "", item.reference_only ? d.misc.externalRef : ""].filter(Boolean).join(" · ")}
+        href={item.url || ""}
+        external
+        cat={cat}
+      />
+    ))}
+  </ul>
+</LibraryShell>

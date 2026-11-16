@@ -1,0 +1,77 @@
+---
+import Base from "../layouts/Base.astro";
+import { dict, nameOf, type Lang } from "../lib/i18n";
+import { get, promptOfEntry, entries, type Item } from "../lib/content";
+import LibraryCard from "../components/LibraryCard.astro";
+import LibraryCrumb from "../components/LibraryCrumb.astro";
+import TagRow from "../components/TagRow.astro";
+import { patternHref, promptHref, effectHref } from "../lib/links";
+
+interface Props { lang: Lang; item: Item }
+const { lang, item } = Astro.props;
+const d = dict(lang);
+const pattern = item.pattern ? get(item.pattern) : undefined;
+const myPrompts = promptOfEntry(item.id);
+const fx = (item.effects || []).map((id) => get(id)).filter(Boolean);
+const res = (item.resources || []).map((id) => get(id)).filter(Boolean);
+const related = entries.filter((e) => e.pattern === item.pattern && e.id !== item.id).slice(0, 3);
+---
+
+<Base lang={lang} title={nameOf(lang, item)} description={item.summary_zh} current="components">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10">
+    <LibraryCrumb lang={lang} section="components" trail={[...(pattern ? [{ label: nameOf(lang, pattern), href: patternHref(lang, pattern.id) }] : []), { label: nameOf(lang, item) }]} />
+    <h1 class="mt-8 text-3xl font-bold tracking-tight">{nameOf(lang, item)}</h1>
+    <p class="mt-2 text-lg text-ink2">{lang === "en" ? item.name_zh : item.name_en}</p>
+    <p class="mt-3 max-w-2xl leading-relaxed text-ink2">{lang === "en" ? item.description : item.summary_zh}</p>
+    <div class="mt-4"><TagRow lang={lang} item={item} /></div>
+
+    <div class="prose-aglaia mt-8 max-w-3xl" set:html={item.html} />
+
+    <section class="mt-10 max-w-3xl">
+      <h2 class="text-xl font-bold">{d.entry.prompt}</h2>
+      {myPrompts.length ? (
+        <div class="mt-3 space-y-2">
+          {myPrompts.map((p) => (
+            <a href={promptHref(lang, p.id)} class="flex items-center justify-between rounded-lg border border-linestrong bg-surface px-4 py-3 font-medium hover:bg-subtle transition-colors">
+              <span>{nameOf(lang, p)}</span>
+              <span class="text-sm text-muted">v{p.version || "1.0.0"}{p.status === "stale" ? ` · ${d.misc.stale}` : ""} →</span>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="mt-3 rounded-lg border border-line bg-subtle p-4 text-ink2">{d.entry.promptPending}</p>
+      )}
+    </section>
+
+    {fx.length > 0 && (
+      <section class="mt-10 max-w-3xl">
+        <h2 class="text-xl font-bold">{d.entry.effects}</h2>
+        <div class="mt-3 flex flex-wrap gap-2">
+          {fx.map((f) => <a href={effectHref(lang, f!.id)} class="rounded-full border border-linestrong px-3.5 py-1.5 text-sm hover:bg-subtle transition-colors">{nameOf(lang, f!)}</a>)}
+        </div>
+      </section>
+    )}
+
+    {res.length > 0 && (
+      <section class="mt-10 max-w-3xl">
+        <h2 class="text-xl font-bold">{d.entry.resources}</h2>
+        <ul class="mt-3 space-y-2">
+          {res.map((r) => (
+            <li class="rounded-lg border border-line bg-surface px-4 py-3">
+              <a href={r!.url} target="_blank" rel="noopener" class="font-medium hover:underline underline-offset-4">{nameOf(lang, r!)} ↗</a>
+              <span class="ml-2 text-sm text-muted">{r!.license?.spdx || ""}{r!.fee_note_zh ? ` · ${r!.fee_note_zh}` : ""}</span>
+              <p class="mt-1 text-sm text-ink2">{lang === "en" ? r!.description : r!.summary_zh}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {related.length > 0 && (
+      <section class="mt-12">
+        <h2 class="text-xl font-bold">{d.entry.related}</h2>
+        <div class="mt-4 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">{related.map((e) => <LibraryCard lang={lang} item={e} />)}</div>
+      </section>
+    )}
+  </div>
+</Base>

@@ -1,0 +1,420 @@
+---
+import Base from "../layouts/Base.astro";
+import { dict, lp, type Lang } from "../lib/i18n";
+import { effects, entries } from "../lib/content";
+import MarqueeRow from "../components/MarqueeRow.astro";
+import StyleCarousel from "../components/StyleCarousel.astro";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = dict(lang);
+const en = lang === "en";
+---
+
+<Base lang={lang} title={en ? "Aglaia — find the name, grab the prompt" : "Aglaia 阿格莱亚 — 查名字，拿提示词，让 AI 做设计"} description={d.taglineSub} current="">
+
+  <!-- 首页是五页全屏滑动（用户 2026-11-14 定三页，2026-11-15 加到五页）：
+       第一页影片，第二页简介与制作者，第三页艺术风格，第四页组件与特效
+       （双行自动滚动），第五页社区招募；原先的效果条带与共创区已分别升格为
+       第四、五页，不再保留。贴靠用 proximity：轻推即落到一页，急滑也能越过，
+       不困住滚动、不吞页脚。 -->
+
+  <!-- 第一页：品牌落版片占一页。自动静音播一次，播完停在落版帧，下方出现下滑提示。
+       手机端影片保持 16:9 不裁切、不留黑边，竖向居中放在一页里，上下是白色留白；
+       桌面端影片全屏铺满（object-cover）。跳过/播放/再看一次都定位在影片框内。
+       配乐（用户 2026-11-15 选定）：Poolside — Chill Your Music（Pixabay Content License，
+       免费商用、无需署名），截 12 秒配进影片；浏览器禁带声自动播放，影片仍默认静音，
+       左下角「开声音」按钮点一下才有声（播完后再点开声会从头重播）。 -->
+  <section id="slide-film" class="relative flex h-[100svh] snap-start items-center overflow-hidden bg-bg sm:block sm:bg-ink">
+    <h1 class="sr-only">{en ? "Aglaia — a design resource library built for AI" : "Aglaia 阿格莱亚 — 为 AI 而建的设计资源库"}</h1>
+    <div class="relative aspect-video w-full sm:absolute sm:inset-0 sm:aspect-auto">
+      <video
+        id="hero-video"
+        class="absolute inset-0 h-full w-full object-cover"
+        autoplay
+        muted
+        playsinline
+        preload="auto"
+        poster="/brand/hero-poster.jpg"
+        aria-label={en ? "Aglaia brand film" : "阿格莱亚品牌动画"}
+      >
+        <source src="/brand/hero.webm" type="video/webm" />
+        <source src="/brand/hero.mp4" type="video/mp4" />
+      </video>
+      <button id="hero-play" hidden class="hero-btn absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ink/80 px-7 py-3.5 font-semibold text-white backdrop-blur transition-opacity hover:opacity-90">
+        ▶ {en ? "Play" : "播放"}
+      </button>
+      <button id="hero-skip" class="hero-btn absolute bottom-6 right-6 rounded-full bg-white/15 px-5 py-2.5 text-sm font-medium text-white backdrop-blur transition-opacity hover:opacity-90">
+        {en ? "Skip" : "跳过"}
+      </button>
+      <button id="hero-sound" class="hero-btn absolute bottom-6 left-6 rounded-full bg-white/15 px-4 py-2.5 text-sm font-medium text-white backdrop-blur transition-opacity hover:opacity-90" data-sound-on={en ? "♪ Sound on" : "♪ 开声音"} data-sound-off={en ? "♪ Sound off" : "♪ 关声音"} aria-label={en ? "Toggle sound" : "开关声音"} aria-pressed="false">
+        ♪ {en ? "Sound on" : "开声音"}
+      </button>
+      <!-- 落版条通栏（inset-x-0）会盖住同在 bottom-6 的开声按钮：容器 pointer-events-none，
+           只有再看一次按钮恢复 pointer-events-auto，空白处点按直通开声按钮。 -->
+      <div id="hero-settled" hidden class="pointer-events-none absolute inset-x-0 bottom-6 flex items-center justify-center gap-3">
+        <div class="hero-cue rounded-full bg-ink/60 px-3.5 py-1.5 text-sm text-white backdrop-blur" aria-hidden="true">
+          {en ? "Scroll ↓" : "向下看看 ↓"}
+        </div>
+        <button id="hero-replay" class="hero-btn pointer-events-auto rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium text-white backdrop-blur transition-opacity hover:opacity-90">
+          ↻ {en ? "Watch again" : "再看一次"}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 第二页：写在前面。滑到这一页时，内容依次升起（揭示动画，见下方脚本与样式）。
+       文案：用户 2026-11-14 14:25 修订并重新排版（五节、十六行，断句原样保留）；
+       2026-11-15 用户删掉第五节（共创型社区三行，社区内容已有第五页专讲），
+       现为四节、十三行。全文与英译见 workspace/goals/figma/aglaia-slide2-copy-2026-11-14.md §四。
+       署名：可汗（Khan），阿格莱亚的设计师。眉题已拿掉——与「写在前面」重复。
+       区段用 min-h 而不用 h：正文十三行，矮屏手机上宁可页变高一点，
+       也不能把字裁掉。
+       手机端正文 14px（桌面端 18px 不变）：为保住用户断句不断裂——
+       16px 时 390px 屏断 6 处、440px 屏断 2 处；14px 时 440px 屏 0 处、
+       390px 屏只剩 2 处。
+       背景（用户 2026-11-14 14:38 发的对称钢笔双猫图，1920×1080，
+       原图 files/aglaia-preface-bg-2026-11-14.png，站内 brand/preface-bg.webp）：
+       双猫分居左右、中间留白，正好夹住居中的正文。底色 (254,253,252)
+       与页面亮白只差 1–2 级，contain 不露接缝。桌面端整页背景
+       （absolute inset-0 + object-contain，不裁切）；手机端竖屏放不下
+       16:9 整图，改为顶部通栏（in-flow 全宽，文案在其下），猫不被裁、
+       字不被压。区段因此是 flex-col + justify-center。 -->
+  <section id="slide-intro" class="relative flex min-h-[100svh] snap-start flex-col items-center justify-center overflow-hidden">
+    <img src="/brand/preface-bg.webp" alt="" aria-hidden="true" loading="eager"
+      class="pointer-events-none block w-full select-none sm:absolute sm:inset-0 sm:h-full sm:w-full sm:object-contain" />
+    <div class="relative mx-auto w-full max-w-3xl px-4 py-12 text-center sm:px-6 sm:py-24">
+      <div class="reveal flex items-center justify-center gap-3" aria-hidden="true">
+        <span class="h-px w-10 bg-linestrong"></span>
+        <svg class="h-4 w-4 text-[#12a594]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 L14.2 9.8 L23 12 L14.2 14.2 L12 23 L9.8 14.2 L1 12 L9.8 9.8 Z" /></svg>
+        <span class="h-px w-10 bg-linestrong"></span>
+      </div>
+      <h2 class="reveal reveal-d1 mt-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl sm:leading-tight">
+        {en ? "Before We Begin" : "写在前面"}
+      </h2>
+      <p class="reveal reveal-d2 mt-8 text-sm leading-loose text-ink2 sm:text-lg sm:leading-loose">
+        {en ? (
+          <>Hi, I'm Khan, the designer behind Aglaia.<br />Aglaia is an AI-friendly design resource library built for vibecoders.</>
+        ) : (
+          <>大家好，我是「阿格莱亚」的设计师可汗。<br />阿格莱亚是一个专门为 vibecoder 设计的 AI 友好型设计资源库。</>
+        )}
+      </p>
+      <p class="reveal reveal-d3 mt-4 text-sm leading-loose text-ink2 sm:text-lg sm:leading-loose">
+        {en ? (
+          <>Our goal is to help more people like me — not formally trained,<br />but determined to build high-quality web and software work by vibecoding.</>
+        ) : (
+          <>我们的目标，是帮助更多像我一样并非科班出身、<br />想靠 vibecoding 做出高质量网页与软件作品的朋友。</>
+        )}
+      </p>
+      <p class="reveal reveal-d4 mt-4 text-sm leading-loose text-ink2 sm:text-lg sm:leading-loose">
+        {en ? (
+          <>Like the academic work we did at university,<br />precise expression depends on solid knowledge.<br />But most vibecoders face the same dilemma —<br />when we try to describe a UI/UX effect, a motion, an interaction,<br />or even just say what a component is and what it does,<br />we often can't say it right, and AI can't understand what we actually mean.</>
+        ) : (
+          <>就像我们在大学里做学术一样，<br />严谨的表达有赖于扎实的知识功底。<br />但是绝大多数 vibecoder 都面临着相同的困境——<br />想描述一种 UI/UX 效果、一段动效、一次交互，<br />甚至只是说清某个组件是什么、要承担什么功能时，<br />我们常常词不达意，AI 也就无法理解我们真正的意思。</>
+        )}
+      </p>
+      <p class="reveal reveal-d5 mt-4 text-sm leading-loose text-ink2 sm:text-lg sm:leading-loose">
+        {en ? (
+          <>That is why I set out to design Aglaia:<br />a knowledge base of aesthetics for website and software visual design,<br />an AI-native encyclopedia of aesthetics, ever growing, ever improving.</>
+        ) : (
+          <>正因如此，我才考虑并设计了阿格莱亚：<br />一个「网站与软件视觉设计的美学知识库」，<br />一部不断生长、不断完善的「AI原生的美学百科全书」。</>
+        )}
+      </p>
+    </div>
+  </section>
+
+  <!-- 第三页：艺术风格。戴贝雷帽的画家阿格莱亚作整页大背景（上罩白色薄纱，保住文字可读），
+       标题在上，39 张变身图轮播放在页面中间偏下，点任意一张进详情。
+       文案：用户 2026-11-14 15:02 定——标题「艺术风格」保留并放大（text-3xl/sm:text-4xl），
+       简介换成"AI感"论述（中英双语，英文为助手翻译）；进入风格库链接保留。
+       背景（用户 2026-11-14 15:30 发新图：画家阿格莱亚全身像站右侧，左侧大面积
+       留空；1920×1080，锁定特征全在；原图存 files/aglaia-art-styles-slide3-bg-2026-11-14.png，
+       站内版 art-styles-bg-right.webp 41KB；2026-11-15 晚起，资源库艺术风格框与
+       风格索引头图也换成这张图，文字一律放左侧）。
+       两档呈现：桌面 lg+ 全幅 cover，object-position 60%（她全身在画内，文案在左、
+       她在右，互不遮挡）；手机与平板不用全幅背景——竖屏 cover 下她的脸与文案
+       在宽度上无法并存（脸宽近屏宽，任何位置都会压到文案），改把图放在文案与
+       轮播之间的中段条带（flex-[2] 间隔内，object-contain，lg:hidden），
+       文案在白底上、她在条带里完整露面，上下都不遮挡。
+       标题与文案间距（用户 2026-11-14 15:20：多空一行）：mt-3 → mt-12
+       （12px + 一行 36px = 48px）。
+       简介断句（同日用户定）：遇逗号、句号即换行，中文 6 行、英文 5 行。
+       行距（用户 2026-11-14 15:12：行间距加宽）：leading-relaxed → leading-loose，
+       与第二页断句文案同款行距。
+       字号（用户同日 15:13：文案字号加大）：text-base → text-lg（16px → 18px）。
+       进入风格库链接（用户同日 15:37：放标题旁）：去掉 justify-between，链接紧跟
+       标题（gap-3），不再贴右缘。 -->
+  <section id="slide-styles" class="relative h-[100svh] snap-start overflow-hidden">
+    <img
+      src="/brand/styles/art-styles-bg-right.webp"
+      alt=""
+      aria-hidden="true"
+      width="1920"
+      height="1080"
+      loading="eager"
+      decoding="async"
+      class="absolute inset-0 hidden h-full w-full object-cover object-[60%_50%] lg:block"
+    />
+    {/* 薄纱（仅桌面）：左强右透——文案在左需白底，她在右要清楚可见；
+         手机与平板无薄纱，文案在白底上、条带里的她不加遮挡。 */}
+    <div class="absolute inset-0 hidden bg-gradient-to-r from-white/95 via-white/55 to-transparent lg:block" aria-hidden="true"></div>
+    <div class="relative mx-auto flex h-full max-w-6xl flex-col px-4 sm:px-6">
+      <div class="pt-24 sm:pt-28">
+        <div class="flex flex-wrap items-baseline gap-3">
+          <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">{en ? "Art styles" : "艺术风格"}</h2>
+          <a class="text-sm underline underline-offset-4 hover:text-ink2" href="/styles/">{en ? "Enter the styles library →" : "进入风格库 →"}</a>
+        </div>
+        <p class="mt-12 max-w-2xl text-lg leading-loose text-ink2">
+          {en ? (
+            <>When doing visual design,<br />many vibecoders often overlook defining an overall art style — and that is one of the chief culprits behind the 'AI look'.<br />For a website or a piece of software,<br />a unified art style is the anchor of the creator's aesthetic expression,<br />and an important window into the work's meaning and soul.</>
+          ) : (
+            <>许多vibecoder在进行视觉设计的时候，<br />往往会忽略对整体艺术风格进行定义，<br />这其实是造成『AI感』的罪魁祸首之一。<br />对于一个网站或是软件作品来说，<br />统一的艺术风格是创作者审美表达的锚点，<br />也是作品内涵与灵魂表达的重要窗口。</>
+          )}
+        </p>
+      </div>
+      <div class="relative flex-[2]" aria-hidden="true">
+        <img
+          src="/brand/styles/art-styles-bg-right.webp"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+          class="absolute inset-0 h-full w-full object-contain lg:hidden"
+        />
+      </div>
+      <StyleCarousel lang={lang} />
+      <div class="flex-[1]" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- 第四页：组件与特效。第三页的镜像——设计师阿格莱亚在左（用户 2026-11-15 发图：
+       戴圆眼镜、桌前用笔记本电脑；1320×743，与画家图同尺寸；原图存
+       files/aglaia-designer-left-2026-11-15.jpg，站内版 components-slide4-bg.webp），
+       标题与简介在右；下方两行自动滚动的卡片（第一行 37 个组件，第二行 30 个效果，
+       反向、慢速、悬停暂停，见 MarqueeRow）。桌面全幅 cover + 左透右浓薄纱；
+       手机与平板同第三页，图放文案与卡片之间的中段条带。
+       简介与第三页同款断句（5 行）；标题与简介间距手机端收紧为 mt-6（本页内容多，
+       给条带留高度），桌面仍 mt-12。 -->
+  <section id="slide-components" class="relative h-[100svh] snap-start overflow-hidden">
+    <img
+      src="/brand/styles/components-slide4-bg.webp"
+      alt=""
+      aria-hidden="true"
+      width="1320"
+      height="743"
+      loading="lazy"
+      decoding="async"
+      class="absolute inset-0 hidden h-full w-full object-cover object-center lg:block"
+    />
+    <div class="absolute inset-0 hidden bg-gradient-to-l from-white/95 via-white/55 to-transparent lg:block" aria-hidden="true"></div>
+    <div class="relative mx-auto flex h-full max-w-6xl flex-col px-4 sm:px-6">
+      <div class="pt-24 sm:pt-28 lg:ml-auto lg:max-w-2xl">
+        <div class="flex flex-wrap items-baseline gap-3">
+          <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">{en ? "Components & effects" : "组件与特效"}</h2>
+          <a class="text-sm underline underline-offset-4 hover:text-ink2" href={lp(lang, "/library")}>{en ? "Enter the library →" : "进入资源库 →"}</a>
+        </div>
+        <p class="mt-6 max-w-2xl text-lg leading-loose text-ink2 sm:mt-12">
+          {en ? (
+            <>Style is the soul; components and effects are the flesh.<br />37 components, 30 effects —<br />each with a name, a number, and a prompt.<br />Pick a style, assemble a set of components,<br />and leave the rest to AI.</>
+          ) : (
+            <>风格是灵魂，组件与效果是血肉。<br />37 个组件、30 种效果，<br />都有名字、有编号、有提示词。<br />挑一种风格，搭一套组件，<br />剩下的交给 AI。</>
+          )}
+        </p>
+      </div>
+      <div class="relative min-h-0 flex-[1]" aria-hidden="true">
+        <img
+          src="/brand/styles/components-slide4-bg.webp"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+          class="absolute inset-0 h-full w-full object-contain lg:hidden"
+        />
+      </div>
+      <div class="space-y-3 pb-6">
+        <MarqueeRow lang={lang} kind="components" items={entries} duration={90} />
+        <MarqueeRow lang={lang} kind="effects" items={effects} reverse duration={70} />
+      </div>
+    </div>
+  </section>
+
+  <!-- 第五页：社区招募。白底文字页：导语 + 四块（分享/回报/售卖/生长）+ 去社区看看。
+       文案按白皮书拟（用户 2026-11-15：先这么写，之后再改）；不写具体数字
+       （服务费 10%、兑换率都是白皮书草案，未定稿）。无背景图。min-h 而非 h，
+       矮屏上内容不裁切。 -->
+  <section id="slide-community" class="relative flex min-h-[100svh] snap-start flex-col items-center justify-center overflow-hidden">
+    <div class="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+      <div class="mx-auto max-w-3xl text-center">
+        <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">{en ? "Join the community" : "社区招募"}</h2>
+        <p class="mt-6 text-lg leading-loose text-ink2">
+          {en
+            ? "Aglaia is not an encyclopedia built by one person. What it becomes depends on everyone who shares."
+            : "阿格莱亚不是一个人做的百科全书。它长成什么样，取决于每一个来分享的人。"}
+        </p>
+      </div>
+      <div class="mt-8 grid gap-6 sm:mt-12 sm:grid-cols-2 sm:gap-8 lg:grid-cols-4 lg:gap-6">
+        <div class="border-t-2 border-ink pt-4">
+          <p class="font-semibold"><span class="mr-2 text-sm text-muted">01</span>{en ? "Share your work" : "分享你的作品"}</p>
+          <p class="mt-2 text-sm leading-relaxed text-ink2">
+            {en
+              ? "UI/UX, interaction, motion — bring the recipe (style + components + prompt) so others can reproduce it and build on it."
+              : "UI/UX、交互、动效，带上它的配方（风格 + 组件 + 提示词），让别人能复现、能再创作。"}
+          </p>
+        </div>
+        <div class="border-t-2 border-ink pt-4">
+          <p class="font-semibold"><span class="mr-2 text-sm text-muted">02</span>{en ? "Contributions pay back" : "贡献有回报"}</p>
+          <p class="mt-2 text-sm leading-relaxed text-ink2">
+            {en
+              ? "Get your submission accepted, join a review, fix an error — earn contribution points, and exchange them for credits."
+              : "提交被收录、参与评审、修错补译，都能拿到贡献值；贡献值可以换成信用点。"}
+          </p>
+        </div>
+        <div class="border-t-2 border-ink pt-4">
+          <p class="font-semibold"><span class="mr-2 text-sm text-muted">03</span>{en ? "Good work can sell" : "好作品能卖"}</p>
+          <p class="mt-2 text-sm leading-relaxed text-ink2">
+            {en
+              ? "In the creator marketplace, you price your own work; the platform only takes a service fee — no buyouts, no exclusivity."
+              : "创作者市场里，你的作品由你定价；平台只收服务费，不买断、不独占。"}
+          </p>
+        </div>
+        <div class="border-t-2 border-ink pt-4">
+          <p class="font-semibold"><span class="mr-2 text-sm text-muted">04</span>{en ? "Grow it together" : "一起让它长大"}</p>
+          <p class="mt-2 text-sm leading-relaxed text-ink2">
+            {en
+              ? "What's missing is listed openly on the community page; contributions fill the gaps first. Every share makes this encyclopedia more complete."
+              : "社区缺什么，缺口清单公开在社区页；贡献先补缺口。每一次分享，都让这部百科全书更完整。"}
+          </p>
+        </div>
+      </div>
+      <p class="mt-8 text-center text-sm sm:mt-12">
+        <a class="underline underline-offset-4 hover:text-ink2" href={lp(lang, "/community")}>{en ? "Visit the community →" : "去社区看看 →"}</a>
+      </p>
+    </div>
+  </section>
+
+  <style>
+    /* 影片是全页唯一的编排时刻：下滑提示轻微浮动，其余内容静态出现。 */
+    .hero-btn[hidden], #hero-settled[hidden] { display: none !important; }
+    .hero-cue { animation: cue-drift 2.6s cubic-bezier(0.45, 0, 0.3, 1) infinite; }
+    @keyframes cue-drift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+    #hero-skip:focus-visible, #hero-replay:focus-visible, #hero-play:focus-visible, #hero-sound:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+    /* 第二页揭示动画：JS 加上 reveal-ready 才隐藏内容（无 JS 时内容直接可见），
+       滑到该页时加 is-inview，内容依次升起。 */
+    .reveal-ready .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
+    .reveal-ready .reveal-d1 { transition-delay: 0.08s; }
+    .reveal-ready .reveal-d2 { transition-delay: 0.16s; }
+    .reveal-ready .reveal-d3 { transition-delay: 0.24s; }
+    .reveal-ready .reveal-d4 { transition-delay: 0.32s; }
+    .reveal-ready .reveal-d5 { transition-delay: 0.40s; }
+    .reveal-ready .reveal-d6 { transition-delay: 0.48s; }
+    .reveal-ready .reveal-d7 { transition-delay: 0.56s; }
+    .reveal-ready.is-inview .reveal { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      .hero-cue { animation: none; }
+      .reveal-ready .reveal { opacity: 1; transform: none; transition: none; }
+    }
+  </style>
+
+  <style is:global>
+    /* 首页纵向贴靠：每滑一页落到一个区块。仅首页文档生效（各页是独立 HTML）。 */
+    html { scroll-snap-type: y proximity; }
+  </style>
+
+  <script>
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    /* --- 品牌片：全屏保持。播完或跳过后停在落版帧，显示下滑提示 + 再看一次 --- */
+    const video = document.getElementById("hero-video") as HTMLVideoElement | null;
+    const playBtn = document.getElementById("hero-play");
+    const replayBtn = document.getElementById("hero-replay");
+    const skipBtn = document.getElementById("hero-skip");
+    const soundBtn = document.getElementById("hero-sound");
+    const settled = document.getElementById("hero-settled");
+    let settledShown = false;
+
+    const showSettled = () => {
+      if (settledShown) return;
+      settledShown = true;
+      if (settled) settled.hidden = false;
+      if (skipBtn) skipBtn.hidden = true;
+    };
+    const hideSettled = () => {
+      settledShown = false;
+      if (settled) settled.hidden = true;
+      if (skipBtn) skipBtn.hidden = false;
+    };
+    const tryPlay = () => {
+      if (!video) return;
+      const p = video.play();
+      if (p) p.catch(() => { /* 自动播放被拦时留海报/当前帧 */ });
+    };
+    const skipToEnd = () => {
+      if (settledShown || !video) return;
+      if (Number.isFinite(video.duration)) {
+        try { video.currentTime = video.duration; } catch { /* 忽略 */ }
+      }
+      video.pause();
+      showSettled();
+    };
+
+    if (video) {
+      video.addEventListener("ended", showSettled);
+      skipBtn?.addEventListener("click", skipToEnd);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") skipToEnd();
+      });
+      replayBtn?.addEventListener("click", () => {
+        hideSettled();
+        video.currentTime = 0;
+        tryPlay();
+      });
+      playBtn?.addEventListener("click", () => {
+        if (playBtn) playBtn.hidden = true;
+        if (skipBtn) skipBtn.hidden = false;
+        video.currentTime = 0;
+        tryPlay();
+      });
+      /* 开声音：点按是用户手势，带声播放不被浏览器拦。影片已播完时开声，
+         从头重播（否则点了也听不见）；减动效用户还没按播放时只开静音开关，
+         播放仍由播放按钮控制。 */
+      soundBtn?.addEventListener("click", () => {
+        if (!soundBtn) return;
+        video.muted = !video.muted;
+        const on = soundBtn.getAttribute("data-sound-on") || "";
+        const off = soundBtn.getAttribute("data-sound-off") || "";
+        soundBtn.textContent = video.muted ? on : off;
+        soundBtn.setAttribute("aria-pressed", String(!video.muted));
+        if (!video.muted && video.paused && Number.isFinite(video.duration) && video.currentTime >= video.duration - 0.1) {
+          hideSettled();
+          video.currentTime = 0;
+          tryPlay();
+        }
+      });
+
+      if (reduced) {
+        video.removeAttribute("autoplay");
+        video.pause();
+        if (playBtn) playBtn.hidden = false;
+        if (skipBtn) skipBtn.hidden = true;
+      } else {
+        tryPlay();
+      }
+    }
+
+    /* --- 第二页：滑到时内容依次升起（只触发一次） --- */
+    const intro = document.getElementById("slide-intro");
+    if (intro) {
+      intro.classList.add("reveal-ready");
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            intro.classList.add("is-inview");
+            io.disconnect();
+          }
+        },
+        { threshold: 0.4 }
+      );
+      io.observe(intro);
+    }
+  </script>
+</Base>

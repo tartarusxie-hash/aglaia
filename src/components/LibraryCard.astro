@@ -1,0 +1,50 @@
+---
+// 可视化组件卡：演示舞台 + 标题，仅此两样（用户 2026-11-15：不要摘要、不要平台/功能标签，不要待复验标记）。
+// 演示定义集中在 src/lib/component-demos.mjs，按 entry id 索引；结构仿 effects-data.mjs 的 cardHtml/cardCss。
+// 复用效果卡的播放机制：.fx-card/.fx-stage + fx-anim（默认暂停，悬停/点按才播放）；
+// 触屏点按脚本与 EffectCard 相同，__fxTapBound 防重复绑定。
+// 被 ComponentsIndex / EntryPage（相关组件）/ PatternPage 三处复用。
+import type { Item } from "../lib/content";
+import { dict, nameOf, type Lang } from "../lib/i18n";
+import { itemHref } from "../lib/links";
+import { COMPONENT_DEMOS } from "../lib/component-demos.mjs";
+
+interface Props { lang: Lang; item: Item }
+const { lang, item } = Astro.props;
+const d = dict(lang);
+const demo = (COMPONENT_DEMOS as any)[item.id];
+const cardHtml = demo?.cardHtml || "";
+const cardCss = demo?.cardCss || "";
+const animated = Boolean(demo?.animated);
+---
+
+<div class="fx-card group flex flex-col" data-fx-card>
+  <a href={itemHref(lang, item)} class="fx-stage relative block aspect-[16/10] cursor-pointer overflow-hidden rounded-lg bg-subtle" data-fx-stage aria-label={nameOf(lang, item)}>
+    <Fragment set:html={cardHtml} />
+    {cardCss && <style set:html={cardCss}></style>}
+    {animated && (
+      <span class="pointer-events-none absolute bottom-2 right-2 rounded-full bg-ink/70 px-2 py-0.5 text-[11px] text-bg opacity-0 transition-opacity group-hover:opacity-100">{d.effect.hoverHint}</span>
+    )}
+  </a>
+  <a href={itemHref(lang, item)} class="mt-3 block">
+    <span class="font-semibold leading-snug group-hover:underline underline-offset-4">{nameOf(lang, item)}</span>
+  </a>
+</div>
+
+<script>
+  // 触屏：第一次点按只播放，再点一次才进入详情（规格 §3.3，与 EffectCard 相同）
+  if (!(window as any).__fxTapBound) {
+    (window as any).__fxTapBound = true;
+    document.addEventListener("click", (ev) => {
+      if (!window.matchMedia("(hover: none)").matches) return;
+      const stage = (ev.target as HTMLElement).closest("[data-fx-stage]");
+      if (!stage) return;
+      const card = stage.closest("[data-fx-card]");
+      if (card && !card.classList.contains("is-playing")) {
+        ev.preventDefault();
+        document.querySelectorAll(".fx-card.is-playing").forEach((c) => c.classList.remove("is-playing"));
+        card.classList.add("is-playing");
+      }
+    });
+  }
+</script>

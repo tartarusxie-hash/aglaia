@@ -1,0 +1,34 @@
+---
+import Base from "../layouts/Base.astro";
+import { dict, lp, nameOf, summaryOf, type Lang } from "../lib/i18n";
+import { labs } from "../lib/content";
+import { DISCIPLINES, L2 } from "../lib/taxonomy";
+import LibraryCrumb from "../components/LibraryCrumb.astro";
+import RowEntry from "../components/RowEntry.astro";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = dict(lang);
+const pad = (n: number) => String(n).padStart(3, "0");
+---
+
+<Base lang={lang} title={lang === "en" ? "Hands-on Lab" : "动手实验室"} current="learn">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10">
+    <LibraryCrumb lang={lang} section="learn" trail={[{ label: d.learn.lab }]} />
+    <h1 class="mt-8 text-3xl font-bold tracking-tight">{d.learn.lab}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink2">{d.learn.labNote}</p>
+    <ul class="mt-8">
+      {labs.map((g, i) => (
+        <RowEntry
+          lang={lang}
+          no={pad(i + 1)}
+          catEn="Lab"
+          title={nameOf(lang, g)}
+          summary={summaryOf(lang, g)}
+          meta={g.discipline && DISCIPLINES[g.discipline] ? L2(lang, DISCIPLINES[g.discipline]) : ""}
+          href={lp(lang, `/learn/lab/${g.id}`)}
+        />
+      ))}
+    </ul>
+  </div>
+</Base>

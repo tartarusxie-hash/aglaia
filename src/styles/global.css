@@ -1,0 +1,114 @@
+@import "./tokens.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+body {
+  background: var(--color-background);
+  color: var(--color-ink-primary);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-body);
+  line-height: var(--font-lineHeight-body);
+  -webkit-font-smoothing: antialiased;
+}
+::selection {
+  background: var(--color-ink-primary);
+  color: var(--color-background);
+}
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* 内容正文（Markdown 渲染结果） */
+.prose-aglaia {
+  line-height: 1.8;
+  color: var(--color-ink-primary);
+}
+.prose-aglaia p {
+  margin: 0.9em 0;
+}
+.prose-aglaia h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 1.6em 0 0.6em;
+  line-height: 1.4;
+}
+.prose-aglaia h3 {
+  font-size: 1.12rem;
+  font-weight: 700;
+  margin: 1.3em 0 0.5em;
+}
+.prose-aglaia ul,
+.prose-aglaia ol {
+  margin: 0.8em 0;
+  padding-left: 1.4em;
+}
+.prose-aglaia ul {
+  list-style: disc;
+}
+.prose-aglaia ol {
+  list-style: decimal;
+}
+.prose-aglaia li {
+  margin: 0.3em 0;
+}
+.prose-aglaia code {
+  font-family: var(--font-family-mono);
+  font-size: 0.86em;
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  padding: 0.08em 0.35em;
+}
+.prose-aglaia pre {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: 1em 1.1em;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+.prose-aglaia pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+.prose-aglaia a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose-aglaia strong {
+  font-weight: 700;
+}
+.prose-aglaia table {
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: 0.92rem;
+}
+.prose-aglaia th,
+.prose-aglaia td {
+  border: 1px solid var(--color-line);
+  padding: 0.45em 0.8em;
+  text-align: left;
+}
+
+/* 效果卡片：默认静态，悬停/点按才播放（规格 §3.3 卡片交互规则） */
+.fx-stage .fx-anim {
+  animation-play-state: paused !important;
+}
+.fx-card.is-playing .fx-anim,
+.fx-card:hover .fx-anim,
+.fx-card:focus-within .fx-anim {
+  animation-play-state: running !important;
+}
+.fx-card .fx-live {
+  transition: transform 0.35s var(--motion-easing-ease-out-expo), box-shadow 0.35s var(--motion-easing-ease-out-expo);
+}
+.fx-card.is-playing .fx-live,
+.fx-card:hover .fx-live {
+  transform: translateY(-2px);
+}

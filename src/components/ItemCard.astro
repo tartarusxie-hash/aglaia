@@ -1,0 +1,28 @@
+---
+import type { Item } from "../lib/content";
+import { dict, nameOf, summaryOf, type Lang } from "../lib/i18n";
+import { itemHref } from "../lib/links";
+import TagRow from "./TagRow.astro";
+
+interface Props { lang: Lang; item: Item }
+const { lang, item } = Astro.props;
+const d = dict(lang);
+const kindLabel =
+  item.kind === "scene" ? d.misc.scene :
+  item.kind === "prompt" ? (item.level === "scene" ? d.misc.sceneLevel : d.misc.componentLevel) :
+  item.kind === "entry" ? (lang === "en" ? "Component" : "组件") :
+  item.kind === "pattern" ? (lang === "en" ? "Pattern" : "模式") :
+  item.kind === "resource" ? (lang === "en" ? "Resource" : "资源") :
+  item.kind === "guide" ? (lang === "en" ? "Guide" : "指南") : item.kind;
+---
+
+<a href={itemHref(lang, item)} class="group flex flex-col rounded-lg border border-line bg-surface p-4 transition-all duration-300 ease-expo hover:-translate-y-0.5 hover:border-linestrong hover:shadow-[0_14px_28px_rgba(20,20,20,0.10)]">
+  <span class="flex items-center gap-2">
+    <span class="rounded bg-ink px-1.5 py-0.5 text-[11px] font-semibold text-bg">{kindLabel}</span>
+    {item.status === "stale" && <span class="rounded border border-linestrong px-1.5 py-0.5 text-[11px] text-ink2">{d.misc.stale}</span>}
+    {item.reference_only && <span class="text-[11px] text-muted">{d.misc.externalRef}</span>}
+  </span>
+  <span class="mt-2.5 font-semibold leading-snug group-hover:underline underline-offset-4">{nameOf(lang, item)}</span>
+  <span class="mt-1 text-sm leading-relaxed text-ink2 line-clamp-2">{summaryOf(lang, item)}</span>
+  <span class="mt-3"><TagRow lang={lang} item={item} /></span>
+</a>

@@ -1,0 +1,269 @@
+---
+// 艺术风格条目页：首屏全幅变身图 + 下方亮白正文区。
+// 用法：src/pages/styles/<id>.astro 传 style 数据对象。
+// heroTone 跟变身图的底色走：深底图用 dark（白字 + 深色渐变），浅底图用 light（墨字 + 白色渐变）。
+import Base from "../layouts/Base.astro";
+import LibraryTrack from "../components/LibraryTrack.astro";
+import type { Lang } from "../lib/i18n";
+
+interface PaletteColor { hex: string; name: string; role: string }
+interface GalleryWork { title: string; artist: string; year: string; status: string; note: string; link?: string; linkLabel?: string }
+interface TimelineNode { year: string; text: string }
+interface Figure { name: string; note: string }
+
+interface StyleData {
+  id: string;
+  nameZh: string;
+  nameEn: string;
+  years: string;
+  origin: string;
+  definition: string;
+  definitionEn: string;
+  intro: string[];
+  promptZh: string;
+  promptEn: string;
+  variants: { label: string; zh: string; en: string }[];
+  palette: PaletteColor[];
+  typography: string;
+  composition: string[];
+  forms: string;
+  texture: string;
+  donts: string[];
+  gallery: GalleryWork[];
+  timeline: TimelineNode[];
+  figures: Figure[];
+  influence: string;
+  relatedStyles: { name: string; note: string; href?: string }[];
+  relatedComponents: { name: string; note: string; href: string }[];
+  keywords: string[];
+  imageBg: string;
+  imageAlt: string;
+  heroTone?: "dark" | "light";
+  footerNote: string;
+}
+
+interface Props { lang: Lang; style: StyleData }
+const { lang, style: s } = Astro.props;
+const en = lang === "en";
+const light = (s.heroTone ?? "dark") === "light";
+// 首屏文字色：深底白字，浅底墨字。
+const tMain = light ? "text-ink" : "text-white";
+const tSub = light ? "text-ink2" : "text-white/80";
+const tMuted = light ? "text-ink2" : "text-white/70";
+const tFaint = light ? "text-muted" : "text-white/60";
+---
+
+<Base lang={lang} title={`${s.nameZh} ${s.nameEn}`} description={s.definition} current="styles">
+  <!-- 首屏：全幅变身图，标题压在左侧留白区 -->
+  <section class:list={["relative min-h-[calc(100vh-3.5rem)] flex flex-col overflow-hidden", light ? "bg-[#FAF9F6]" : "bg-[#141c33]"]}>
+    <img
+      src={s.imageBg}
+      alt={s.imageAlt}
+      fetchpriority="high"
+      class="absolute inset-0 h-full w-full object-cover object-[80%_center] sm:object-[70%_center]"
+    />
+    <!-- 可读层：深底用深色渐变，浅底用白色渐变；宁可图暗一点，不可字糊掉 -->
+    <div
+      class:list={[
+        "absolute inset-0",
+        light
+          ? "bg-gradient-to-r from-white/90 via-white/50 to-white/0"
+          : "bg-gradient-to-r from-[#141c33]/90 via-[#141c33]/45 to-[#141c33]/5",
+      ]}
+      aria-hidden="true"
+    ></div>
+    <div
+      class:list={[
+        "absolute inset-0",
+        light
+          ? "bg-gradient-to-t from-white/80 via-transparent to-transparent"
+          : "bg-gradient-to-t from-[#141c33]/85 via-transparent to-transparent",
+      ]}
+      aria-hidden="true"
+    ></div>
+
+    <div class="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6 pt-6">
+      <LibraryTrack lang={lang} active="styles" />
+    </div>
+
+    <div class="relative z-10 mx-auto mt-auto w-full max-w-6xl px-4 sm:px-6 pb-14 pt-24">
+      <p class:list={["text-sm tracking-wide", tMuted]}>{en ? "Art Style · Aesthetics Encyclopedia" : "艺术风格 · 美学百科全书"}</p>
+      <h1 class:list={["mt-3 text-5xl sm:text-6xl font-bold tracking-tight", tMain]}>{s.nameZh}</h1>
+      <p class:list={["mt-2 text-xl", tSub]}>{s.nameEn}</p>
+      <p class:list={["mt-5 max-w-xl text-lg leading-relaxed", light ? "text-ink2" : "text-white/90"]}>{s.definition}</p>
+      <p class:list={["mt-4 text-sm", tMuted]}>{s.years} · {s.origin}</p>
+      <p class:list={["mt-10 text-sm", tFaint]}>{en ? "Scroll ↓" : "向下看看 ↓"}</p>
+    </div>
+  </section>
+
+  <!-- 正文：亮白底 -->
+  <div class="mx-auto w-full max-w-3xl px-4 sm:px-6">
+    <section class="py-12">
+      <h2 class="text-2xl font-bold tracking-tight">{en ? "Introduction" : "简介"}</h2>
+      {s.intro.map((p) => (
+        <p class="mt-5 leading-8 text-ink2">{p}</p>
+      ))}
+      <p class="mt-5 text-sm text-muted">{en ? "English definition: " : "英文定义："}{s.definitionEn}</p>
+    </section>
+
+    <section class="border-t border-line py-12">
+      <h2 class="text-2xl font-bold tracking-tight">{en ? "The first prompt" : "第一个 prompt"}</h2>
+      <p class="mt-3 text-ink2 leading-7">{en ? "Say this style to an AI, in the first sentence. Copy and use it directly." : "要跟 AI 说这个风格，第一句话就这么说。直接复制就能用。"}</p>
+      <div class="mt-6 space-y-4">
+        <figure class="border border-line rounded-lg p-5">
+          <figcaption class="text-sm text-muted">中文</figcaption>
+          <blockquote class="mt-2 leading-8">{s.promptZh}</blockquote>
+          <button type="button" data-copy={s.promptZh} class="copy-btn mt-4 rounded-full border border-line px-4 py-1.5 text-sm hover:border-ink">{en ? "Copy" : "复制"}</button>
+        </figure>
+        <figure class="border border-line rounded-lg p-5">
+          <figcaption class="text-sm text-muted">English</figcaption>
+          <blockquote class="mt-2 leading-8">{s.promptEn}</blockquote>
+          <button type="button" data-copy={s.promptEn} class="copy-btn mt-4 rounded-full border border-line px-4 py-1.5 text-sm hover:border-ink">{en ? "Copy" : "复制"}</button>
+        </figure>
+      </div>
+      <h3 class="mt-10 text-lg font-semibold">{en ? "Variations" : "变体"}</h3>
+      <ul class="mt-4 space-y-5">
+        {s.variants.map((v) => (
+          <li>
+            <p class="font-medium">{v.label}</p>
+            <p class="mt-1 leading-7 text-ink2">{v.zh}</p>
+            <p class="mt-1 text-sm leading-6 text-muted">{v.en}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="border-t border-line py-12">
+      <h2 class="text-2xl font-bold tracking-tight">{en ? "Style card" : "风格卡"}</h2>
+      <p class="mt-3 text-ink2 leading-7">{en ? "The machine-usable spec. This is what the workbench calls when it assembles." : "给机器用的规格。工作台拼装时，真正调用的就是这张卡。"}</p>
+      <h3 class="mt-8 text-lg font-semibold">{en ? "Palette" : "配色"}</h3>
+      <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {s.palette.map((c) => (
+          <div class="border border-line rounded-lg overflow-hidden">
+            <div class="h-16" style={`background:${c.hex}`}></div>
+            <div class="p-3">
+              <p class="font-mono text-sm">{c.hex}</p>
+              <p class="mt-0.5 text-sm text-ink2">{c.name} · {c.role}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <dl class="mt-10 space-y-6">
+        <div>
+          <dt class="font-semibold">{en ? "Typography" : "字体"}</dt>
+          <dd class="mt-1 leading-7 text-ink2">{s.typography}</dd>
+        </div>
+        <div>
+          <dt class="font-semibold">{en ? "Composition" : "构图"}</dt>
+          <dd class="mt-1 leading-7 text-ink2">{s.composition.join("；")}。</dd>
+        </div>
+        <div>
+          <dt class="font-semibold">{en ? "Forms" : "形态"}</dt>
+          <dd class="mt-1 leading-7 text-ink2">{s.forms}</dd>
+        </div>
+        <div>
+          <dt class="font-semibold">{en ? "Texture & motifs" : "质感与母题"}</dt>
+          <dd class="mt-1 leading-7 text-ink2">{s.texture}</dd>
+        </div>
+        <div>
+          <dt class="font-semibold">{en ? "Don'ts" : "禁忌"}</dt>
+          <dd class="mt-1 leading-7 text-ink2">{s.donts.join("；")}。</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="border-t border-line py-12">
+      <h2 class="text-2xl font-bold tracking-tight">{en ? "Gallery" : "画廊"}</h2>
+      <p class="mt-3 text-ink2 leading-7">{en ? "A few representative works. Look at each one for the one thing it shows best." : "几幅代表作。每幅只看一点：它最能说明这个风格的那一点。"}</p>
+      <div class="mt-8 space-y-8">
+        {s.gallery.map((w) => (
+          <article class="border-t border-line pt-6 first:border-t-0 first:pt-0">
+            <h3 class="text-lg font-semibold">{w.title}</h3>
+            <p class="mt-1 text-sm text-muted">{w.artist} · {w.year} · {w.status}</p>
+            <p class="mt-2 leading-7 text-ink2">{w.note}</p>
+            {w.link && (
+              <p class="mt-2 text-sm">
+                <a href={w.link} target="_blank" rel="noopener" class="underline underline-offset-4 hover:text-ink">{w.linkLabel ?? (en ? "View the work ↗" : "查看原作 ↗")}</a>
+              </p>
+            )}
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="border-t border-line py-12">
+      <h2 class="text-2xl font-bold tracking-tight">{en ? "History" : "历史流变"}</h2>
+      <ol class="mt-8 space-y-5">
+        {s.timeline.map((t) => (
+          <li class="flex gap-4">
+            <span class="shrink-0 w-24 font-mono text-sm pt-1 text-ink2">{t.year}</span>
+            <span class="leading-7 text-ink2">{t.text}</span>
+          </li>
+        ))}
+      </ol>
+      <h3 class="mt-10 text-lg font-semibold">{en ? "Key figures" : "关键人物"}</h3>
+      <ul class="mt-4 space-y-2">
+        {s.figures.map((f) => (
+          <li class="leading-7 text-ink2"><span class="font-medium text-ink">{f.name}</span>——{f.note}</li>
+        ))}
+      </ul>
+      <h3 class="mt-10 text-lg font-semibold">{en ? "Evolution & influence" : "演变与影响"}</h3>
+      <p class="mt-3 leading-8 text-ink2">{s.influence}</p>
+    </section>
+
+    <section class="border-t border-line py-12">
+      <h2 class="text-2xl font-bold tracking-tight">{en ? "Related entries" : "相关条目"}</h2>
+      <h3 class="mt-8 text-lg font-semibold">{en ? "Related styles" : "相关流派"}</h3>
+      <ul class="mt-4 flex flex-wrap gap-2">
+        {s.relatedStyles.map((r) => (
+          <li class="rounded-full border border-line px-4 py-1.5 text-sm text-ink2" title={r.note}>
+            {r.href ? (
+              <a href={r.href} class="underline underline-offset-4 hover:text-ink">{r.name}</a>
+            ) : (
+              r.name
+            )}
+          </li>
+        ))}
+      </ul>
+      <p class="mt-3 text-sm text-muted">{en ? "Style pages are published one by one; these become links as they go live." : "各流派页逐篇发布，发布后转为链接。"}</p>
+      <h3 class="mt-8 text-lg font-semibold">{en ? "Components that pair well" : "搭得好的组件"}</h3>
+      <ul class="mt-4 space-y-2">
+        {s.relatedComponents.map((c) => (
+          <li class="leading-7 text-ink2">
+            <a href={c.href} class="font-medium text-ink underline underline-offset-4 hover:text-ink">{c.name}</a>
+            <span>——{c.note}</span>
+          </li>
+        ))}
+      </ul>
+      <p class="mt-8 text-sm text-muted">{en ? "Keywords: " : "关键词："}{s.keywords.join("、")}</p>
+      <p class="mt-6 border-t border-line pt-6 text-sm text-muted">{s.footerNote}</p>
+    </section>
+  </div>
+</Base>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>(".copy-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const text = btn.getAttribute("data-copy") ?? "";
+      const done = btn.dataset.done === "1";
+      if (done) return;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      const original = btn.textContent ?? "";
+      btn.textContent = "已复制";
+      btn.dataset.done = "1";
+      setTimeout(() => {
+        btn.textContent = original;
+        delete btn.dataset.done;
+      }, 2000);
+    });
+  });
+</script>

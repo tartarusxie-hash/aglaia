@@ -1,0 +1,9 @@
+---
+import GuidePage from "../../../../views/GuidePage.astro";
+import { disciplines } from "../../../../lib/content";
+export function getStaticPaths() {
+  return disciplines.map((item) => ({ params: { id: item.id }, props: { item } }));
+}
+const { item } = Astro.props;
+---
+<GuidePage lang="en" item={item} mode="discipline" />

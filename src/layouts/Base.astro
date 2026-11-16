@@ -1,0 +1,225 @@
+---
+import "@fontsource-variable/inter";
+import "@fontsource/jetbrains-mono/400.css";
+import "@fontsource/jetbrains-mono/700.css";
+import "../styles/global.css";
+import { dict, lp, otherLangPath, type Lang } from "../lib/i18n";
+
+interface Props {
+  lang: Lang;
+  title: string;
+  description?: string;
+  current?: string;
+  /** /admin 等不应被收录的页面 */
+  noindex?: boolean;
+}
+const { lang, title, description, current = "", noindex = false } = Astro.props;
+const d = dict(lang);
+const path = Astro.url.pathname.replace(/\/$/, "") || "/";
+const switchHref = otherLangPath(lang, path);
+const navItems = [
+  { key: "home", href: lp(lang, "/") },
+  { key: "library", href: lp(lang, "/library") },
+  { key: "workbench", href: lp(lang, "/workbench") },
+  { key: "community", href: lp(lang, "/community") },
+] as const;
+// 导航高亮映射：资源库六分支（组件/提示词/效果/资源/设计原理/skills）+ 艺术风格归 library，工作台与社区各归其一。
+const activeKey =
+  current === "" || current === "home" ? "home"
+  : ["components", "prompts", "effects", "resources", "learn", "skills", "styles", "fonts"].includes(current) ? "library"
+  : current === "workbench" ? "workbench"
+  : current === "community" ? "community"
+  : current === "account" ? "account"
+  : "";
+// 页脚方向 A（用户 2026-11-15 定：极简一行）：只留 4 个链接 + 一句免费承诺 + ©。
+// 原先 13 个链接的"板块"栏、两段许可/红线文字、"给 AI 用"栏全部拿掉——
+// 许可与红线全文在 /about 已有（AboutPage），AI 注册表入口在资源库左栏底部。
+const footerItems = [
+  { key: "library", href: lp(lang, "/library") },
+  { key: "workbench", href: lp(lang, "/workbench") },
+  { key: "community", href: lp(lang, "/community") },
+  { key: "about", href: lp(lang, "/about") },
+] as const;
+---
+
+<!doctype html>
+<html lang={lang === "en" ? "en" : "zh-CN"}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} · Aglaia 阿格莱亚</title>
+    {description && <meta name="description" content={description} />}
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  </head>
+  <body class="min-h-screen flex flex-col">
+    <header class="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6">
+        <div class="flex h-14 items-center gap-3">
+          <a href={lp(lang, "/")} class="flex items-center gap-2 shrink-0" aria-label="Aglaia">
+            <img src="/brand/logo-128.jpg" alt="" class="h-8 w-8 rounded-md object-cover" width="32" height="32" />
+            <span class="font-bold tracking-tight">Aglaia</span>
+            <span class="hidden sm:inline text-ink2 text-sm">阿格莱亚</span>
+          </a>
+          <nav class="ml-4 hidden lg:flex items-center gap-6 text-[15px]" aria-label="main">
+            {
+              navItems.map((n) => (
+                <a
+                  href={n.href}
+                  class={`underline-offset-4 hover:underline ${activeKey === n.key ? "font-semibold text-ink" : "text-ink2"}`}
+                >
+                  {d.nav[n.key as keyof typeof d.nav]}
+                </a>
+              ))
+            }
+          </nav>
+          <div class="ml-auto flex items-center gap-4">
+            <!-- 未登录态（默认渲染；登录状态全走客户端 JS，静态站不做服务端渲染） -->
+            <span id="auth-links" class="flex items-center gap-4">
+              <a href={`${lp(lang, "/account")}?tab=login`} class="hidden sm:inline-block text-sm font-medium text-ink2 underline-offset-4 hover:underline">{d.nav.login}</a>
+              <a href={`${lp(lang, "/account")}?tab=register`} class="rounded-md bg-primary px-3.5 py-1.5 text-sm font-semibold text-onprimary hover:opacity-90 transition-opacity">{d.nav.signup}</a>
+            </span>
+            <!-- 已登录态：头像 + 下拉菜单 -->
+            <div id="auth-user" class="relative hidden">
+              <button id="auth-menu-btn" type="button" class="flex items-center rounded-full" aria-haspopup="true" aria-expanded="false" aria-label={d.account.myPage}>
+                <img id="auth-avatar" src="" alt="" width="32" height="32" class="h-8 w-8 rounded-full object-cover" />
+              </button>
+              <div id="auth-menu" class="absolute right-0 top-full z-50 mt-2 hidden w-44 rounded-lg border border-line bg-surface py-1.5 shadow-lg">
+                <a href={lp(lang, "/account")} class="block px-4 py-2 text-sm hover:bg-subtle">{d.account.myPage}</a>
+                <a href={lp(lang, "/account/settings")} class="block px-4 py-2 text-sm hover:bg-subtle">{d.account.settings}</a>
+                <span class="my-1 block border-t border-line"></span>
+                <button id="auth-logout" type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-subtle">{d.account.logout}</button>
+              </div>
+            </div>
+            <a href={switchHref} class="text-sm font-medium text-ink2 underline-offset-4 hover:underline">
+              {lang === "en" ? "中文" : "EN"}
+            </a>
+            <button id="menu-btn" class="lg:hidden rounded-md px-2 py-1.5 text-ink2" aria-label="menu" aria-expanded="false">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+            </button>
+          </div>
+        </div>
+        <nav id="mobile-nav" class="hidden lg:hidden pb-4 flex flex-col gap-1 text-[15px]" aria-label="mobile">
+          {
+            navItems.map((n) => (
+              <a href={n.href} class={`py-2 underline-offset-4 hover:underline ${activeKey === n.key ? "font-semibold text-ink" : "text-ink2"}`}>
+                {d.nav[n.key as keyof typeof d.nav]}
+              </a>
+            ))
+          }
+          <div id="mobile-auth-links" class="flex flex-col gap-1">
+            <a href={`${lp(lang, "/account")}?tab=login`} class="py-2 text-ink2 underline-offset-4 hover:underline">{d.nav.login}</a>
+            <a href={`${lp(lang, "/account")}?tab=register`} class="mt-1 w-fit rounded-md bg-primary px-3.5 py-1.5 text-sm font-semibold text-onprimary">{d.nav.signup}</a>
+          </div>
+          <div id="mobile-auth-user" class="hidden flex-col gap-1">
+            <a href={lp(lang, "/account")} class="py-2 text-ink2 underline-offset-4 hover:underline">{d.account.myPage}</a>
+            <a href={lp(lang, "/account/settings")} class="py-2 text-ink2 underline-offset-4 hover:underline">{d.account.settings}</a>
+            <button id="mobile-auth-logout" type="button" class="w-fit py-2 text-left text-ink2 underline-offset-4 hover:underline">{d.account.logout}</button>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main class="flex-1 w-full" data-pagefind-body>
+      <slot />
+    </main>
+
+    <footer class="border-t border-line mt-16">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-6 text-sm sm:px-6">
+        <a href={lp(lang, "/")} class="flex items-center gap-2 font-bold" aria-label="Aglaia">
+          <img src="/brand/logo-128.jpg" alt="" class="h-7 w-7 rounded object-cover" width="28" height="28" /> Aglaia 阿格莱亚
+        </a>
+        <nav class="flex flex-wrap gap-x-5 gap-y-2 text-ink2" aria-label="footer">
+          {footerItems.map((n) => <a class="hover:underline underline-offset-4" href={n.href}>{d.nav[n.key as keyof typeof d.nav]}</a>)}
+        </nav>
+        <p class="text-muted">{d.footer.free}</p>
+        <p class="ml-auto text-muted">{d.footer.copy}</p>
+      </div>
+    </footer>
+
+    <script>
+      import { getMe, logout, initialAvatar } from "../lib/account-client";
+
+      const btn = document.getElementById("menu-btn");
+      const nav = document.getElementById("mobile-nav");
+      btn?.addEventListener("click", () => {
+        const open = nav?.classList.toggle("hidden");
+        btn.setAttribute("aria-expanded", String(!open));
+      });
+
+      // 站点头部登录状态：静态站，状态全走客户端 JS 请求 /api/auth/me。
+      // 未登录 / 服务不可用时都保持默认的登录/注册链接，不报错。
+      const authLinks = document.getElementById("auth-links");
+      const authUser = document.getElementById("auth-user");
+      const authAvatar = document.getElementById("auth-avatar") as HTMLImageElement | null;
+      const authMenuBtn = document.getElementById("auth-menu-btn");
+      const authMenu = document.getElementById("auth-menu");
+      const mobileLinks = document.getElementById("mobile-auth-links");
+      const mobileUser = document.getElementById("mobile-auth-user");
+
+      function showLoggedOut() {
+        authLinks?.classList.remove("hidden");
+        authUser?.classList.add("hidden");
+        mobileLinks?.classList.remove("hidden");
+        mobileUser?.classList.add("hidden");
+        mobileUser?.classList.remove("flex");
+      }
+      function showLoggedIn(user) {
+        authLinks?.classList.add("hidden");
+        authUser?.classList.remove("hidden");
+        mobileLinks?.classList.add("hidden");
+        mobileUser?.classList.remove("hidden");
+        mobileUser?.classList.add("flex");
+        if (authAvatar) {
+          authAvatar.src = user.avatar_url || initialAvatar(user.nickname);
+          authAvatar.alt = user.nickname;
+          authAvatar.onerror = () => {
+            authAvatar.onerror = null;
+            authAvatar.src = initialAvatar(user.nickname);
+          };
+        }
+      }
+      async function refreshAuth() {
+        try {
+          showLoggedIn(await getMe());
+        } catch {
+          showLoggedOut();
+        }
+      }
+      refreshAuth();
+      // 登录/注册/改资料后，账号页会派发该事件，头部即时刷新
+      window.addEventListener("aglaia:auth-changed", refreshAuth);
+
+      function closeMenu() {
+        authMenu?.classList.add("hidden");
+        authMenuBtn?.setAttribute("aria-expanded", "false");
+      }
+      authMenuBtn?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const hidden = authMenu?.classList.toggle("hidden");
+        authMenuBtn.setAttribute("aria-expanded", String(!hidden));
+      });
+      document.addEventListener("click", (e) => {
+        if (!authMenu || authMenu.classList.contains("hidden")) return;
+        const t = e.target as Node;
+        if (!authMenu.contains(t) && !(authMenuBtn && authMenuBtn.contains(t))) closeMenu();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeMenu();
+      });
+
+      async function doLogout() {
+        try {
+          await logout();
+        } catch {}
+        // 刷新本页；若在需要登录的页（设置/管理），该页脚本会把用户带回账号页
+        location.reload();
+      }
+      document.getElementById("auth-logout")?.addEventListener("click", doLogout);
+      document.getElementById("mobile-auth-logout")?.addEventListener("click", doLogout);
+    </script>
+  </body>
+</html>

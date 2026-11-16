@@ -1,0 +1,135 @@
+---
+import StylePage from "../../views/StylePage.astro";
+
+// 黏土拟态条目 v0.1（2026-11-13）。正文见 workspace/goals/figma/entries/claymorphism-2026-11-13.md。
+// 由合篇《关联数字风格》拆分而来，用户 2026-11-13 决定拆五篇。
+const style = {
+  id: "claymorphism",
+  nameZh: "黏土拟态",
+  nameEn: "Claymorphism",
+  years: "约 2021 年—",
+  origin: "设计社区",
+  definition: "黏土拟态把界面元素吹胀成圆润的 3D 黏土——深外阴影 + 内阴影，色彩柔和饱满，是新拟态的\"友好继任者\"。",
+  definitionEn: "Claymorphism inflates interface elements into soft, rounded 3D clay — deep outer shadows plus inner shadows, soft saturated colors — the friendly successor to neumorphism.",
+  intro: [
+    "黏土拟态属于扁平化之后的\"深度回归\"家族。2013 年扁平化终结了拟物化时代，2014 年谷歌的质感设计把深度带回规则，2019 年新拟态试图用\"从背景里挤出来\"的柔和立体接棒，却因对比度与可定制性的短板没能走远。2020 年玻璃拟态登场，2021 年黏土拟态接棒：3D 黏土质感的圆润立体元素，深外阴影 + 内阴影，色彩柔和饱满——新拟态的\"友好继任者\"。",
+    "它的诀窍是\"吹胀\"：把新拟态的形状吹胀成圆顶状的立体，把元素从背景上\"浮\"起来，而不是从背景里\"挤\"出来。深外阴影负责托起，两个内阴影（一亮一暗）负责塑形，背景色从此不再受限——这是它相对新拟态最实在的一处进步（马莱维奇命名文章；Smashing Magazine 2022 年文章，均见来源）。",
+    "区别一张表说清：质感设计是系统（规则最全，做产品用它）；玻璃拟态是材质（模糊 + 半透明，做氛围用它）；黏土拟态是造型（膨胀的圆润 3D，做亲和用它）。选风格先看需求，再看这张表。",
+  ],
+  promptZh: "用黏土拟态风格设计一个儿童教育 App 的首页：吹胀的圆润 3D 按钮、柔和饱满的色彩、深外阴影，友好、柔软、像玩具。",
+  promptEn: "Design a kids' education app home screen in claymorphism style: inflated rounded 3D buttons, soft saturated colors, deep outer shadows — friendly, soft, toy-like.",
+  variants: [
+    {
+      label: "产品",
+      zh: "用黏土拟态风格做一个儿童绘本 App 的书架页：吹胀的圆润 3D 封面卡片、柔和饱满的粉彩、深外阴影 + 内高光，友好、柔软、像积木。",
+      en: "Design a kids' picture-book app bookshelf in claymorphism style: inflated rounded 3D cover cards, soft saturated pastels, deep outer shadows with inner highlights — friendly, soft, toy-block-like.",
+    },
+    {
+      label: "品牌",
+      zh: "用黏土拟态风格设计一个玩具电商店铺首页：膨胀的圆润 3D 商品卡、黏土哑光质感、柔和饱满的色彩与深外阴影，温暖、好玩、想捏一下。",
+      en: "Design a toy store home page in claymorphism style: inflated rounded 3D product cards, matte clay texture, soft saturated colors with deep outer shadows — warm, playful, squeezable.",
+    },
+    {
+      label: "插画",
+      zh: "用黏土拟态风格做一张 3D 插画海报：吹胀的黏土小人与圆润气球形状、哑光质感、深外阴影，温暖、友好、像定格动画。",
+      en: "Make a 3D illustration poster in claymorphism style: inflated clay characters and rounded balloon shapes, matte finish, deep outer shadows — warm, friendly, stop-motion-like.",
+    },
+  ],
+  palette: [
+    { hex: "#F4B8C1", name: "黏土粉", role: "柔和饱满" },
+    { hex: "#D6A2FF", name: "黏土紫", role: "浅紫" },
+    { hex: "#F9AE01", name: "黏土黄", role: "明亮点缀" },
+    { hex: "#B8E8D4", name: "黏土薄荷", role: "柔和粉彩" },
+    { hex: "#A9D6F5", name: "黏土天蓝", role: "柔和粉彩" },
+    { hex: "#2D3557", name: "黏土墨", role: "文字与深色" },
+  ],
+  typography: "细无衬线 Inter（OFL）或 Poppins（OFL）。",
+  composition: ["圆润膨胀元素 + 深外阴影", "元素浮于背景之上", "层级靠阴影与色彩，不靠描边"],
+  forms: "膨胀圆润的 3D 形；大圆角（通常 24–48px）、圆顶状按钮与卡片。",
+  texture: "黏土哑光、深外阴影 + 内阴影；内阴影一亮（左上）一暗（右下），塑出黏土的体积感。",
+  donts: ["黏土不用在严肃金融场景", "不要在同一页滥用——用在关键卡片与主按钮上，配扁平骨架", "黏土元素上的文字必须保证对比度（加深文字色或加阴影）"],
+  gallery: [
+    {
+      title: "黏土拟态 Claymorphism",
+      artist: "米哈乌·马莱维奇",
+      year: "2021—",
+      status: "版权期",
+      note: "看：把新拟态的形状\"吹胀\"——圆润黏土 3D + 深外阴影；新拟态的友好继任者。",
+      link: "https://hype4.academy/articles/design/claymorphism-in-user-interfaces",
+      linkLabel: "查看原文（Hype4）↗",
+    },
+    {
+      title: "《Claymorphism: Will It Stick Around?》",
+      artist: "阿德里安·贝斯",
+      year: "2022",
+      status: "版权期",
+      note: "看：黏土拟态第一次被主流前端刊物系统讨论——从拟物化、扁平化、新拟态一路讲到黏土，并给出三层阴影的 CSS 配方。2022 年 3 月 16 日。",
+      link: "https://www.smashingmagazine.com/2022/03/claymorphism-css-ui-design-trend/",
+      linkLabel: "查看原文（Smashing Magazine）↗",
+    },
+    {
+      title: "clay.css",
+      artist: "阿德里安·贝斯",
+      year: "2022",
+      status: "版权期",
+      note: "看：一个 `.clay` 类就把黏土效果套到任意元素上——CSS 变量调背景、圆角与三层阴影；风格从文章变成了可直接用的工具。开源项目。",
+      link: "https://codeadrian.github.io/clay.css/",
+      linkLabel: "查看官网（clay.css）↗",
+    },
+    {
+      title: "《How To Create Claymorphism Using CSS》",
+      artist: "阿尔伯特·瓦利茨基",
+      year: "2021",
+      status: "版权期",
+      note: "看：命名文章发表同月的开发者视角教程——浅紫底上的白卡片，外阴影 + 内阴影两步做出黏土效果；还附了 Hype4 的黏土生成器链接。2021 年 12 月 19 日。",
+      link: "https://albertwalicki.com/blog/how-to-create-claymorphism-using-css",
+      linkLabel: "查看原文↗",
+    },
+    {
+      title: "Dribbble #claymorphism 概念稿合集",
+      artist: "各设计师",
+      year: "2021—",
+      status: "版权期",
+      note: "看：黏土风格概念稿的聚集地——任务管理 App、支付 App、玩具电商、日历与开关组件；看\"吹胀\"在真实界面里长什么样。",
+      link: "https://dribbble.com/tags/claymorphism",
+      linkLabel: "查看标签页（Dribbble）↗",
+    },
+  ],
+  timeline: [
+    { year: "2013", text: "扁平化登场（iOS 7），拟物化时代终结；\"屏幕上的深度怎么做\"成为悬而未决的问题。" },
+    { year: "2019", text: "新拟态出现——柔和立体从背景里\"挤\"出来；因对比度与可定制性短板没能走远，成为黏土拟态的直接前身。" },
+    { year: "2020 年 11 月", text: "马莱维奇命名玻璃拟态；磨砂玻璃面板开始普及，\"深度回归\"家族成形。" },
+    { year: "2021 年 12 月", text: "马莱维奇发表《Claymorphism in user interfaces》，提出黏土拟态——把新拟态的形状吹胀成圆润的 3D 黏土。" },
+    { year: "2021 年 12 月 19 日", text: "瓦利茨基发表 CSS 教程《How To Create Claymorphism Using CSS》，给出开发者视角的实现方法。" },
+    { year: "2022 年 3 月 16 日", text: "阿德里安·贝斯在 Smashing Magazine 发表《Claymorphism: Will It Stick Around?》，黏土拟态进入主流前端刊物的讨论。" },
+    { year: "2022 年 4 月", text: "贝斯的 clay.css 上线 Product Hunt（2022 年 4 月 14 日，见来源注），风格从文章变成可直接用的开源工具。" },
+  ],
+  figures: [
+    { name: "米哈乌·马莱维奇", note: "命名了玻璃拟态（2020）与黏土拟态（2021），也参与了新拟态的定名；\"morphism\"系列命名的关键人物。" },
+    { name: "阿德里安·贝斯", note: "Smashing Magazine 黏土拟态文章作者，clay.css 的作者；把风格落到了 CSS 工具上。" },
+    { name: "阿尔伯特·瓦利茨基", note: "命名文章发表同月即写出 CSS 实现教程的开发者，Hype4 黏土生成器的参与者。" },
+  ],
+  influence: "从拟物化与扁平化的摆动中来；扁平化（2013）打断了拟物化，质感设计（2014）把深度规则化，新拟态（2019）失败后，玻璃与黏土接棒。黏土拟态的贡献是把\"柔和立体\"从背景里解放出来：元素浮于背景之上，背景色不再受限，对比度问题随之缓解。今天它已沉淀为一个小而稳定的利基风格——儿童产品、教育类 App 与插画感强的落地页仍在用它；2025 年 Liquid Glass 标志着\"深度\"正式回归主流系统，而黏土仍是\"做亲和\"的首选造型。",
+  relatedStyles: [
+    { name: "新拟态", note: "直接前身——黏土就是把新拟态\"吹胀\"", href: "/styles/neumorphism/" },
+    { name: "玻璃拟态", note: "同期姊妹风格，两者可混搭", href: "/styles/glassmorphism/" },
+    { name: "质感设计", note: "深度规则的源头", href: "/styles/material-design/" },
+    { name: "拟物化", note: "材质的远源", href: "/styles/skeuomorphism/" },
+    { name: "扁平化设计", note: "被反叛的对象，黏土是对扁平的柔软回应", href: "/styles/flat-design/" },
+  ],
+  relatedComponents: [
+    { name: "商品卡片", note: "黏土膨胀造型", href: "/components/entries/product-card/" },
+    { name: "基础卡片", note: "黏土圆顶卡片", href: "/components/entries/card-basic/" },
+    { name: "底部抽屉", note: "圆润抽屉面板", href: "/components/entries/bottom-sheet/" },
+    { name: "移动端底部导航", note: "悬浮黏土导航条", href: "/components/entries/mobile-tab-bar/" },
+    { name: "英雄区", note: "黏土 3D 插画氛围", href: "/components/entries/hero-section/" },
+  ],
+  keywords: ["黏土拟态", "Claymorphism", "新拟态", "内阴影", "深外阴影", "膨胀 3D", "粉彩"],
+  imageBg: "/brand/styles/claymorphism-bg.webp",
+  imageAlt: "阿格莱亚身着黏土拟态风格：吹胀的圆润黏土云朵与柔和粉彩",
+  heroTone: "light",
+  footerNote: "草稿。命名文章准确发布日未定（原文页无日期，有第三方笔记称 2021 年 12 月 20 日，未取单方说法，正文只写 2021 年 12 月）；clay.css 上 Product Hunt 的日期仅来自搜索摘要；Dribbble 标签页验证时返回的是 2025-03-06 的缓存页，内容以实时页面为准。英文全文翻译后补。",
+};
+---
+
+<StylePage lang="zh" style={style} />

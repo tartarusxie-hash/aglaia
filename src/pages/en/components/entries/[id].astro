@@ -1,0 +1,9 @@
+---
+import EntryPage from "../../../../views/EntryPage.astro";
+import { entries } from "../../../../lib/content";
+export function getStaticPaths() {
+  return entries.map((item) => ({ params: { id: item.id }, props: { item } }));
+}
+const { item } = Astro.props;
+---
+<EntryPage lang="en" item={item} />

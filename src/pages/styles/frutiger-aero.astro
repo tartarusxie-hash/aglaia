@@ -1,0 +1,136 @@
+---
+import StylePage from "../../views/StylePage.astro";
+
+// Frutiger Aero 条目 v0.1（2026-11-13）。正文见 workspace/goals/figma/entries/frutiger-aero-2026-11-13.md。
+// 由合篇《关联数字风格》拆分而来，用户 2026-11-13 决定拆五篇。
+const style = {
+  id: "frutiger-aero",
+  nameZh: "Frutiger Aero",
+  nameEn: "Frutiger Aero",
+  years: "约 2004–2013，2023 年复兴",
+  origin: "千禧年消费文化",
+  definition: "Frutiger Aero 是科技与自然和解的乐观主义——水滴、气泡、蓝天绿草与玻璃光泽。",
+  definitionEn: "Frutiger Aero is an optimistic reconciliation of technology and nature — water droplets, bubbles, blue skies, green grass, and glossy glass.",
+  intro: [
+    "Frutiger Aero 与 Y2K 美学是 2000 年代的两次\"乐观科技\"浪潮：前者是液态铬、半透明糖果塑料、全息渐变与星星闪光，后者是水滴、气泡、蓝天绿草与玻璃光泽——科技与自然和解的乐观主义。两者都被 2013 年的扁平化终结，又都在 2020 年代作为怀旧美学复兴。Frutiger Aero 的时代约在 2004–2013 年，Windows Vista Aero（2006/2007）为代表。",
+    "它的名字是事后取的：前一半来自瑞士字体设计师阿德里安·弗鲁提格的 Frutiger 字体，后一半来自微软的 Windows Aero 设计语言。命名者是消费者美学研究所（CARI）成员索菲·先，命名年份有分歧（2017 或 2018 年，见本篇待定的事）。在它流行的当年，人们并没有一个统一的名字来称呼它，只是在 Windows 的玻璃窗口、游戏机的圆润界面和广告里的蓝天绿草中，一次次遇见同一种乐观。",
+    "2023 年，Frutiger Aero 作为怀旧美学在 Z 世代中复兴。它的回响一直延续到今天：苹果 2025 年发布的 Liquid Glass 设计语言，就被认为受到了 Frutiger Aero 的影响（TechRadar，2025 年 6 月，转引自英文 Wikipedia）。",
+  ],
+  promptZh: "用 Frutiger Aero 风格做一张复古科技海报：玻璃光泽大字、蓝天绿草渐变、水滴与气泡形状、星星闪光，千禧年的乐观与闪亮。",
+  promptEn: "Design a retro-tech poster in Frutiger Aero style: glossy glass headline type, blue-sky-and-green-grass gradients, water-droplet and bubble shapes, star sparkles — millennial optimism, glossy and bright.",
+  variants: [
+    {
+      label: "产品",
+      zh: "用 Frutiger Aero 风格设计一个天气 App 的首页：蓝天绿草大图背景、半透明玻璃面板卡片、水滴形图标、阳光光晕点缀，清新、明亮、乐观。",
+      en: "Design a weather app home screen in Frutiger Aero style: a big blue-sky-and-green-grass photo background, translucent glass panel cards, water-droplet icons, sunlight lens-flare accents — fresh, bright, optimistic.",
+    },
+    {
+      label: "品牌",
+      zh: "用 Frutiger Aero 风格设计一个环保科技品牌的官网首屏：蓝天白云、绿草地平线、玻璃光泽按钮、漂浮气泡装饰，科技与自然和解的未来感。",
+      en: "Design a green-tech brand's website hero in Frutiger Aero style: blue sky and white clouds, a green-grass horizon, glossy glass buttons, floating bubble decorations — a future where technology and nature are reconciled.",
+    },
+    {
+      label: "界面",
+      zh: "用 Frutiger Aero 风格设计一个音乐播放器：蓝天渐变底、半透明玻璃面板、水滴形播放按钮、气泡上浮动效，轻盈、通透、像在水里听歌。",
+      en: "Design a music player in Frutiger Aero style: a blue-sky gradient background, translucent glass panels, a water-droplet play button, bubbles drifting upward — light, luminous, like listening to music underwater.",
+    },
+  ],
+  palette: [
+    { hex: "#4FA8E0", name: "Frutiger 天蓝", role: "蓝天" },
+    { hex: "#7CB342", name: "草地绿", role: "绿草" },
+    { hex: "#A8D8F0", name: "水滴浅蓝", role: "水滴与气泡" },
+    { hex: "#FFFFFF", name: "云朵白", role: "白云与玻璃高光" },
+    { hex: "#1B6CA8", name: "深海蓝", role: "水深处 / 深色文字" },
+    { hex: "#F2C94C", name: "阳光黄", role: "光晕点缀" },
+  ],
+  typography: "Frutiger 为商业字体，只作参考，不直接用；开源替代 Inter 或 Noto Sans（OFL / Apache 2.0）。",
+  composition: ["蓝天绿草大图 + 玻璃面板"],
+  forms: "水滴、气泡、光晕。",
+  texture: "玻璃光泽、水滴、蓝天绿草。",
+  donts: ["玻璃面板不用在纯色底上（无景可映、无物可透）", "不用暗沉压抑的配色（违背蓝天绿草的明亮乐观）", "水滴、气泡、光晕不堆满画面（点缀，不是主角）", "玻璃面板上的文字必须保证对比度（加深填充或加阴影）", "五个子风格不同时混用（先选一个主风格）"],
+  gallery: [
+    {
+      title: "Frutiger Aero",
+      artist: "时代风格",
+      year: "约 2004–2013（2023 年复兴）",
+      status: "版权期",
+      note: "看：水滴、气泡、蓝天绿草——科技与自然和解的乐观主义；名字是事后取的（2017 或 2018 年，见本篇待定的事）。代表产品均在版权期。",
+      link: "https://en.wikipedia.org/wiki/Frutiger_Aero",
+      linkLabel: "查看介绍（Wikipedia）↗",
+    },
+    {
+      title: "Windows Aero（Windows Vista 2006 / Windows 7 2009）",
+      artist: "微软",
+      year: "2006 / 2009",
+      status: "版权期",
+      note: "看：磨砂玻璃窗框、半透明、动态光效与 Flip 3D；Frutiger Aero 名字的一半来源，也是最成熟的代表作。",
+      link: "https://en.wikipedia.org/wiki/Windows_Aero",
+      linkLabel: "查看介绍（Wikipedia）↗",
+    },
+    {
+      title: "Wii",
+      artist: "任天堂",
+      year: "2006",
+      status: "版权期",
+      note: "看：第七代主机里最\"亲和\"的一台——白色机身、圆润频道界面；Frutiger Aero 走进客厅的代表作。",
+      link: "https://en.wikipedia.org/wiki/Nintendo_Wii",
+      linkLabel: "查看介绍（Wikipedia）↗",
+    },
+    {
+      title: "CARI 的 Frutiger Aero 整理页",
+      artist: "消费者美学研究所",
+      year: "—",
+      status: "版权期",
+      note: "看：命名机构的第一手定义与案例库；名字来源（Windows Vista 的 Aero + 弗鲁提格字体）的出处。",
+      link: "https://cari.institute/aesthetics/frutiger-aero",
+      linkLabel: "查看整理页（CARI）↗",
+    },
+    {
+      title: "Aesthetics Wiki 的 Frutiger Aero 条目",
+      artist: "社区整理",
+      year: "—",
+      status: "版权期",
+      note: "看：从 2000–2004 年萌芽到 2022 年后复兴的完整时间线与子流派（Frutiger Eco、Technozen 等）。",
+      link: "https://aesthetics.fandom.com/wiki/Frutiger_Aero?file=Seventhgen123.jpg",
+      linkLabel: "查看条目（Aesthetics Wiki）↗",
+    },
+  ],
+  timeline: [
+    { year: "约 2004", text: "Frutiger Aero 时代开始：水滴、气泡、蓝天绿草；承接 Y2K 美学，是 2000 年代第二次\"乐观科技\"浪潮。" },
+    { year: "2006", text: "Windows Vista 发布，Windows Aero 登场——磨砂玻璃窗框与半透明界面；Frutiger Aero 最成熟的代表作。" },
+    { year: "2006", text: "Wii 发售（11 月 19 日，北美首发），圆润亲和的频道界面把 Frutiger Aero 带进客厅。" },
+    { year: "2009", text: "Windows 7 发布，进一步扩大了 Aero 的玻璃与光泽特征。" },
+    { year: "2012–2013", text: "Windows 8（2012）以 Metro 设计语言取代 Aero 玻璃主题，iOS 7（2013）把扁平化正式化；2013 年扁平化终结了 Frutiger Aero。" },
+    { year: "2017 或 2018", text: "CARI 成员索菲·先为这一风格命名\"Frutiger Aero\"——年份有分歧，本篇未取单方说法。" },
+    { year: "2023", text: "Frutiger Aero 作为怀旧美学在 Z 世代中复兴，在 TikTok、YouTube 上走红。" },
+  ],
+  figures: [
+    { name: "索菲·先", note: "CARI 成员，Frutiger Aero 的命名者（2017 或 2018 年，见本篇待定的事）。" },
+    { name: "阿德里安·弗鲁提格", note: "瑞士字体设计师，Frutiger 字体的作者，Frutiger Aero 名字的一半来源。" },
+  ],
+  influence: "从 Y2K 美学接棒而来——Y2K 是液态铬与全息渐变的千禧年乐观，Frutiger Aero 把这份乐观转向自然：蓝天、绿草、水滴，科技不再是冰冷的机器，而是与自然和解的未来。2013 年扁平化打断了它，界面走向极简与克制；但玻璃与深度从未真正离开——2020 年玻璃拟态、2025 年苹果 Liquid Glass，都是同一条血脉的回响。今天再用 Frutiger Aero，更多是氛围而非组件规范：它适合讲\"乐观的未来\"，不适合装严肃的系统。",
+  relatedStyles: [
+    { name: "Y2K 美学", note: "前浪，同属 2000 年代的两次\"乐观科技\"浪潮", href: "/styles/y2k/" },
+    { name: "拟物化", note: "Frutiger Aero 的材质源头", href: "/styles/skeuomorphism/" },
+    { name: "扁平化设计", note: "2013 年的转折点，终结了它", href: "/styles/flat-design/" },
+    { name: "玻璃拟态", note: "玻璃质感的继承者", href: "/styles/glassmorphism/" },
+    { name: "质感设计", note: "同合篇姐妹篇", href: "/styles/material-design/" },
+    { name: "黏土拟态", note: "同合篇姐妹篇", href: "/styles/claymorphism/" },
+    { name: "极简主义", note: "扁平化之后的克制一面", href: "/styles/minimalism/" },
+  ],
+  relatedComponents: [
+    { name: "英雄区", note: "蓝天绿草全幅氛围", href: "/components/entries/hero-section/" },
+    { name: "基础卡片", note: "玻璃面板卡片", href: "/components/entries/card-basic/" },
+    { name: "底部抽屉", note: "玻璃质感悬浮面板", href: "/components/entries/bottom-sheet/" },
+    { name: "商品卡片", note: "水滴光泽商品卡", href: "/components/entries/product-card/" },
+    { name: "移动端底部导航", note: "玻璃质感悬浮导航", href: "/components/entries/mobile-tab-bar/" },
+  ],
+  keywords: ["Frutiger Aero", "Windows Aero", "水滴", "气泡", "蓝天绿草", "玻璃光泽", "乐观科技", "怀旧复兴"],
+  imageBg: "/brand/styles/frutiger-aero-bg.webp",
+  imageAlt: "阿格莱亚身着 Frutiger Aero 风格：蓝天绿草、清澈水面与漂浮气泡",
+  heroTone: "light",
+  footerNote: "草稿。命名年份有分歧（英文 Wikipedia 称 2018 年，简明 Wikipedia 与 Aesthetics Wiki 称 2017 年），正文写\"2017 或 2018 年\"，未取单方说法；Aesthetics Wiki 外链含 ?file= 参数，发布前确认是否换无参数地址。英文全文翻译后补。",
+};
+---
+
+<StylePage lang="zh" style={style} />

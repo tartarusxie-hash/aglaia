@@ -1,0 +1,134 @@
+---
+import StylePage from "../../views/StylePage.astro";
+
+// 玻璃拟态条目 v0.1（2026-11-13）。正文见 workspace/goals/figma/entries/glassmorphism-2026-11-13.md。
+// 由合篇《关联数字风格》拆分而来，用户 2026-11-13 决定拆五篇。
+const style = {
+  id: "glassmorphism",
+  nameZh: "玻璃拟态",
+  nameEn: "Glassmorphism",
+  years: "约 2020 年—（Liquid Glass 2025 年）",
+  origin: "苹果与设计社区",
+  definition: "玻璃拟态是磨砂玻璃质感的界面风格：半透明面板悬浮在鲜艳背景上，背景模糊、细亮边框，轻盈、通透、有深度。",
+  definitionEn: "Glassmorphism is a frosted-glass interface style: translucent panels float over a vibrant background, with backdrop blur and thin light borders — airy, luminous, layered.",
+  intro: [
+    "玻璃拟态回答的是扁平化之后的问题：屏幕上的深度怎么做。它的答案是\"材质\"——不画阴影堆纸片，而是让面板本身变成一块磨砂玻璃：背景模糊、半透明填充、细亮边框，面板悬浮在鲜艳渐变之上，底下的色彩透过模糊层晕染出来，深度就有了。",
+    "这块玻璃的源头是两个系统：苹果 iOS 7（2013）的模糊层与微软 Windows Acrylic（Fluent Design，2017）。2020 年它正式登场：米哈乌·马莱维奇 11 月 22 日在 UX Collective 发表《Glassmorphism in user interfaces》，为这种风格命名；同一个月，macOS Big Sur 把磨砂玻璃面板带进主流系统。2021 年 Windows 11 进一步把 Acrylic 与 Mica 写进 Fluent 材质体系。2025 年，苹果在 WWDC 发布 Liquid Glass（iOS 26 等），玻璃拟态被系统化——不再只是模糊，而是\"会弯曲光线的玻璃\"：实时折射、高光随动。",
+    "玻璃拟态的定位很清楚：它是材质，不是系统。做氛围用它——播放页、控制中心、悬浮导航；做整套产品规则，另有质感设计。它的成败系于两件事：底下必须有东西可模糊（纯色底上玻璃无从谈起），面板上的文字必须保证对比度（加深填充或加阴影）。",
+  ],
+  promptZh: "用玻璃拟态风格设计一个音乐 App 的播放页：鲜艳渐变背景上悬浮磨砂玻璃面板、背景模糊、半透明填充、细亮边框，轻盈、通透、有深度。",
+  promptEn: "Design a music app now-playing screen in glassmorphism style: frosted glass panels floating over a vibrant gradient background, backdrop blur, translucent fill, thin light borders — airy, luminous, layered.",
+  variants: [
+    {
+      label: "产品",
+      zh: "用玻璃拟态风格做一个天气 App 的首页：鲜艳渐变天空底 + 悬浮磨砂玻璃卡片，卡片上是今日温度与逐小时预报，背景模糊、细亮边框，清透、有层次。",
+      en: "Build a weather app home screen in glassmorphism style: frosted glass cards floating over a vibrant gradient sky, showing today's temperature and the hourly forecast, backdrop blur, thin light borders — clear, luminous, layered.",
+    },
+    {
+      label: "产品",
+      zh: "用玻璃拟态风格设计一个金融 App 的仪表盘：深色渐变底 + 半透明玻璃面板卡片，余额与走势图悬浮其上，细亮边框、文字对比度充足，克制、通透、可信。",
+      en: "Design a finance app dashboard in glassmorphism style: translucent glass-panel cards over a dark gradient, balance and charts floating on top, thin light borders, text contrast fully legible — restrained, luminous, trustworthy.",
+    },
+    {
+      label: "网页",
+      zh: "用玻璃拟态风格做一个着陆页的登录区：全幅鲜艳渐变背景中央悬浮一块磨砂玻璃登录卡，输入框与按钮都在玻璃上，背景模糊、光边细亮，轻盈、现代、有深度。",
+      en: "Design a landing page login section in glassmorphism style: a frosted glass login card floating at the center of a full-bleed vibrant gradient, inputs and button on the glass, backdrop blur, thin glowing borders — airy, modern, layered.",
+    },
+  ],
+  palette: [
+    { hex: "#FFFFFF", name: "玻璃白", role: "半透明填充（须以半透明 + 背景模糊使用）" },
+    { hex: "#8B5CF6", name: "渐变紫", role: "鲜艳渐变底" },
+    { hex: "#3B82F6", name: "渐变蓝", role: "鲜艳渐变底" },
+    { hex: "#EC4899", name: "渐变粉", role: "鲜艳渐变底" },
+    { hex: "#111827", name: "深墨底", role: "深色模式下的底色" },
+    { hex: "#FFFFFF", name: "光边白", role: "细亮边框，高不透明度白" },
+  ],
+  typography: "细无衬线 Inter（OFL）或 Poppins（OFL）。",
+  composition: ["鲜艳渐变底 + 半透明面板悬浮其上", "面板居中或分层错落", "底下色彩透过模糊层晕染"],
+  forms: "圆角面板、细亮边框；面板边缘带一圈细光，像玻璃被\"切\"出来的断面。",
+  texture: "磨砂模糊、半透明、光边；母题是\"玻璃\"本身——透光、折射、悬浮。",
+  donts: ["玻璃拟态不用在纯色底上（无物可模糊）", "玻璃面板上的文字必须保证对比度（加深填充或加阴影）", "不要满屏铺玻璃——只用在需要分层的面板、弹窗与导航上"],
+  gallery: [
+    {
+      title: "iOS 7 模糊层",
+      artist: "苹果",
+      year: "2013",
+      status: "版权期",
+      note: "看：玻璃拟态的源头之一——控制中心与通知中心用高斯模糊 + 半透明层叠出深度；扁平化里留下的\"玻璃种子\"。",
+      link: "https://en.wikipedia.org/wiki/IOS_7",
+      linkLabel: "查看介绍（Wikipedia）↗",
+    },
+    {
+      title: "Windows Acrylic / Fluent Design",
+      artist: "微软",
+      year: "2017—",
+      status: "版权期",
+      note: "看：玻璃拟态的另一源头——Acrylic 是\"复制磨砂玻璃效果的半透明材质\"，背景模糊 + 色彩晕染 + 噪点，用于弹出层与菜单等瞬时界面。",
+      link: "https://docs.microsoft.com/en-us/windows/uwp/design/style/acrylic",
+      linkLabel: "查看文档（Microsoft Learn）↗",
+    },
+    {
+      title: "《Glassmorphism in user interfaces》",
+      artist: "米哈乌·马莱维奇",
+      year: "2020",
+      status: "版权期",
+      note: "看：命名文章——2020 年 11 月 22 日发表，\"Glassmorphism\"一词由此而来；作者在文中指出这风格只能\"少量使用\"，且背景上的对象必须保持结构与可读性。",
+      link: "https://uxdesign.cc/glassmorphism-in-user-interfaces-1f39bb1308c9",
+      linkLabel: "查看原文（UX Collective）↗",
+    },
+    {
+      title: "macOS Big Sur 磨砂玻璃界面",
+      artist: "苹果",
+      year: "2020",
+      status: "版权期",
+      note: "看：玻璃拟态进主流系统的一步——半透明菜单栏与控制中心；玻璃拟态的普及之作。",
+      link: "https://en.wikipedia.org/wiki/macOS_Big_Sur",
+      linkLabel: "查看介绍（Wikipedia）↗",
+    },
+    {
+      title: "Liquid Glass（iOS 26 等）",
+      artist: "苹果",
+      year: "2025",
+      status: "版权期",
+      note: "看：玻璃拟态的系统化——实时折射、高光随动；不再只是模糊，而是\"会弯曲光线的玻璃\"。",
+      link: "https://www.dezeen.com/2025/06/10/apple-ios-26-software-update-liquid-glass/",
+      linkLabel: "查看报道（Dezeen）↗",
+    },
+  ],
+  timeline: [
+    { year: "2013", text: "iOS 7 发布（6 月 10 日 WWDC 公布，9 月 18 日上线）：控制中心、通知中心用模糊层 + 半透明叠出深度——玻璃拟态的源头之一。" },
+    { year: "2017", text: "微软发布 Fluent Design，Acrylic 材质登场：半透明磨砂玻璃效果，背景模糊 + 噪点——玻璃拟态的另一源头。" },
+    { year: "2019", text: "新拟态昙花一现：柔和浮雕的\"挤出塑料\"未能站稳脚跟，为玻璃与黏土让路。" },
+    { year: "2020 年 11 月", text: "玻璃拟态命名（马莱维奇 11 月 22 日文章《Glassmorphism in user interfaces》）；macOS Big Sur（11 月）普及磨砂玻璃面板。" },
+    { year: "2021", text: "Windows 11 把 Acrylic 与新材质 Mica 写进 Fluent 体系，玻璃拟态扩展到桌面端主流系统。" },
+    { year: "2025", text: "苹果 WWDC 发布 Liquid Glass（iOS 26 等），玻璃拟态被系统化：实时折射、高光随动。" },
+  ],
+  figures: [
+    { name: "米哈乌·马莱维奇", note: "命名了玻璃拟态（2020），也参与了新拟态的定名；后于 2021 年提出黏土拟态。" },
+    { name: "乔尼·艾维", note: "iOS 7 redesign 的主导者，模糊层与半透明分层的源头人物（经 Wikipedia 验证）。" },
+  ],
+  influence: "从拟物化与扁平化的摆动中来。2013 年扁平化终结了拟物时代，却在 iOS 7 里留下了模糊层这颗\"玻璃种子\"；2017 年微软 Acrylic 在桌面端接力；2019 年新拟态失败后，玻璃拟态在 2020 年被命名并随 Big Sur 普及；2025 年 Liquid Glass 标志着\"深度\"正式回归主流系统。今天几乎所有主流设计系统都在\"扁平骨架 + 材质深度\"的混合态里，玻璃拟态是其中最常见的材质答案。",
+  relatedStyles: [
+    { name: "质感设计", note: "深度回归的另一答案：规则最全的系统", href: "/styles/material-design/" },
+    { name: "黏土拟态", note: "玻璃的姊妹风格，同为新拟态的继任者", href: "/styles/claymorphism/" },
+    { name: "新拟态", note: "玻璃的直接前身", href: "/styles/neumorphism/" },
+    { name: "拟物化", note: "玻璃材质的远源", href: "/styles/skeuomorphism/" },
+    { name: "扁平化设计", note: "2013 年的转折点，玻璃的反题", href: "/styles/flat-design/" },
+    { name: "极简主义", note: "玻璃拟态的克制一面", href: "/styles/minimalism/" },
+  ],
+  relatedComponents: [
+    { name: "基础卡片", note: "玻璃面板", href: "/components/entries/card-basic/" },
+    { name: "底部抽屉", note: "玻璃拟态的经典载体", href: "/components/entries/bottom-sheet/" },
+    { name: "移动端底部导航", note: "Liquid Glass 式悬浮导航", href: "/components/entries/mobile-tab-bar/" },
+    { name: "弹窗", note: "玻璃弹窗", href: "/components/entries/modal-dialog/" },
+    { name: "搜索栏", note: "悬浮玻璃搜索条", href: "/components/entries/search-bar/" },
+  ],
+  keywords: ["玻璃拟态", "Glassmorphism", "Liquid Glass", "磨砂玻璃", "背景模糊", "半透明", "深度", "材质"],
+  imageBg: "/brand/styles/glassmorphism-bg.webp",
+  imageAlt: "阿格莱亚身着玻璃拟态风格：透明玻璃气泡、深青底色",
+  heroTone: "dark",
+  footerNote: "草稿。命名文章直链已补（马莱维奇 2020-11-22 原文）；Windows 11 Acrylic 与 Mica 一节仅依据搜索摘要，未打开原文逐字核对；乔尼·艾维是否列关键人物待修订轮定夺。英文全文翻译后补。",
+};
+---
+
+<StylePage lang="zh" style={style} />

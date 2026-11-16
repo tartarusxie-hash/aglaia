@@ -1,0 +1,73 @@
+---
+import Base from "../layouts/Base.astro";
+import { lp, type Lang } from "../lib/i18n";
+import { patterns, entries, prompts, scenes, effects, resources, guides } from "../lib/content";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const en = lang === "en";
+const total = patterns.length + entries.length + prompts.length + scenes.length + effects.length + resources.length + guides.length;
+---
+
+<Base lang={lang} title={en ? "About" : "关于"} current="about">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10">
+    <h1 class="text-3xl font-bold tracking-tight">{en ? "About Aglaia" : "关于 Aglaia 阿格莱亚"}</h1>
+    <div class="prose-aglaia mt-6 max-w-3xl">
+      {en ? (
+        <>
+          <p>Aglaia is a design resource library built for AI, and a co-creation community. Its core library is free forever. It does not try to be another Figma. Instead it answers three beginner questions: <strong>What is this part called? How do I ask my AI to build it? What should it look like when it moves?</strong></p>
+          <h2>What's here</h2>
+          <p>{total} entries so far: {patterns.length} patterns and {entries.length} components with standard bilingual names; {prompts.length + scenes.length} fill-in prompt flows (seven-part template, framework targets html-css / tailwind / react); {effects.length} effects with live sandboxes; {guides.length} learning guides including four hands-on instruments; {resources.length} open-source resources, linked and license-labelled — never bundled or redistributed.</p>
+          <h2>Principles</h2>
+          <ul>
+            <li><strong>Free core, forever.</strong> The core library is free — content under CC BY 4.0, code under MIT. Creator-market works are priced by their authors; the platform charges a service fee (rate in the white paper, to be decided).</li>
+            <li><strong>Honest labels.</strong> Prompts not yet verified against a live model say so. Previews are called previews, not simulators.</li>
+            <li><strong>Red lines.</strong> We never bundle Apple official design kits or SF Pro. HarmonyOS official resources are not built in without written permission — our HarmonyOS entries are self-drawn schematics plus spec notes.</li>
+            <li><strong>Machine-readable.</strong> The whole library is one registry: <a href="/registry.json">registry.json</a> (shadcn-compatible) + <a href="/registry-ext.json">registry-ext.json</a> + <a href="/llms.txt">llms.txt</a>, so your AI can read it directly or over MCP.</li>
+          </ul>
+          <h2>Roadmap</h2>
+          <p>The resource library is phase one. Next come richer preview sandboxes, then the <a href={lp(lang, "/workbench")}>workbench</a>: assemble an early App interaction model in-platform and export it into your own source code. Community submissions via GitHub PR open after the official launch — foundation first.</p>
+          <h2>Sources</h2>
+          <p>The seed library draws on a 2026-10-28 open-resource survey (350+ candidates, license-checked). Effect implementations and all prompt flows are original to this site: batch 1's prompt flows were rebuilt in 2026-11 from open, license-clean effect references (Magic UI, Uiverse, Animista, Paper Shaders, tsParticles, CSS Loaders — see Resources) after the decision not to export the original teaching materials they were once planned from.</p>
+        </>
+      ) : (
+        <>
+          <p>Aglaia 阿格莱亚是一个为 AI 而建的设计资源库，也是一个共创型社区。核心资源库永久免费。它不打算再做一个 Figma，而是回答小白的三个问题：<strong>这个东西叫什么？怎么跟 AI 说它才做得出来？动起来应该是什么样？</strong></p>
+          <h2>这里有什么</h2>
+          <p>目前共 {total} 条：{patterns.length} 个模式与 {entries.length} 个组件（中英双语标准名）；{prompts.length + scenes.length} 条填空式提示词（七段式，框架目标 html-css / tailwind / react）；{effects.length} 个带实时沙盒的效果；{guides.length} 篇学习内容（含四台可动手仪器）；{resources.length} 个开源资源（只外链与标注许可，不打包、不再分发）。</p>
+          <h2>原则</h2>
+          <ul>
+            <li><strong>核心永久免费。</strong>核心资源库永久免费：内容 CC BY 4.0，代码 MIT。创作者市场作品由作者定价，平台收取服务费（费率见白皮书，待定）。</li>
+            <li><strong>如实标注。</strong>没用真实模型验证过的提示词就写「待复验」；预览就叫预览，不叫模拟器。</li>
+            <li><strong>许可红线。</strong>绝不打包 Apple 官方设计套件与 SF Pro；鸿蒙官方资源未获书面许可不内置——本站鸿蒙条目是自绘示意加规范要点。</li>
+            <li><strong>机器可读。</strong>全库就是一份注册表：<a href="/registry.json">registry.json</a>（shadcn 兼容）+ <a href="/registry-ext.json">registry-ext.json</a> + <a href="/llms.txt">llms.txt</a>，你的 AI 可以直接读取或经 MCP 调用。</li>
+          </ul>
+          <h2>路线图</h2>
+          <p>资源库是第一期。接下来是更丰富的预览沙盒，然后是<a href={lp(lang, "/workbench")}>工作台</a>：在站内拼出早期 App 交互模型，导出进你自己的源码。社区投稿（GitHub PR）在正式上线后开放——先打地基。</p>
+          <h2>来源说明</h2>
+          <p>种子库来自 2026-10-28 的开源资源调研（350+ 候选，逐项查许可）。效果实现与全部提示词均为本站原创：其中「批次 1」提示词原计划取材自一套教学素材，2026-11-10 决定不导出该素材，改为从许可干净的开源效果参考（Magic UI、Uiverse、Animista、Paper Shaders、tsParticles、CSS Loaders 等，见「资源」板块）重新自研撰写。</p>
+        </>
+      )}
+    </div>
+
+    <section class="mt-14 grid items-start gap-6 md:grid-cols-2">
+      <img src="/brand/mascot-concept.jpg" alt={en ? "Aglaia mascot concept art" : "阿格莱亚吉祥物设定图"} class="w-full rounded-lg border border-line" width="1320" height="880" loading="lazy" />
+      <div>
+        <h2 class="text-2xl font-bold tracking-tight">{en ? "The mascot" : "吉祥物"}</h2>
+        <div class="prose-aglaia mt-4">
+          {en ? (
+            <>
+              <p>Her name is <strong>Aglaia</strong> — the same as the site. A cream-white cat with teal eyes and dark eyeliner markings, dark-navy ear tips and tail, and a navy cape fastened by a gold A-shaped clasp set with a teal four-point star.</p>
+              <p>She is the site's guide: you will meet her on the home page and at the workbench, where she points you to the right part and the right prompt. Her portrait is also the site's logo — and the app icon.</p>
+            </>
+          ) : (
+            <>
+              <p>她叫<strong>阿格莱亚</strong>，和这个站同名：一只奶白色的猫，青绿色的眼睛带着深色眼线，耳尖和尾巴是深藏青色，披着同色的斗篷，领口别一枚金色的 A 形扣，中间嵌着一颗青绿四角星。</p>
+              <p>她是站里的向导：你在首页和工作台会遇见她，她负责把你领到对的零件和对的提示词跟前。她的头像同时是本站的 logo，也是 App 的图标。</p>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  </div>
+</Base>

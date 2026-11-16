@@ -1,0 +1,133 @@
+---
+import StylePage from "../../views/StylePage.astro";
+
+// 质感设计条目 v0.1（2026-11-13）。正文见 workspace/goals/figma/entries/material-design-2026-11-13.md。
+// 由合篇《关联数字风格》拆分而来，用户 2026-11-13 决定拆五篇。
+const style = {
+  id: "material-design",
+  nameZh: "质感设计",
+  nameEn: "Material Design",
+  years: "2014 年—（Material 3 / Material You 2021 年—）",
+  origin: "谷歌",
+  definition: "界面是一叠有高度的\"纸片\"——海拔阴影定层级，涟漪动效回应触摸。",
+  definitionEn: "The interface is a stack of paper sheets with real elevation — shadows set the hierarchy, ripples answer the touch.",
+  intro: [
+    "2014 年，谷歌在 Google I/O 上发布质感设计，把界面视为有高度的\"纸片\"，用海拔阴影、涟漪动效与大胆色彩建立层级——深度第一次有了完整的规则。它不是一种装饰，而是一套系统：网格、纸片、海拔、动效、色彩、字体，每一层都有章可循。扁平化（2013）把深度拿走之后，质感设计把深度带回了规则里。",
+    "质感设计的演变是一条从统一到个性的路。2014 年的第一代以纸片与海拔立规矩；2018 年的 Material Theming（媒体俗称\"Material Design 2\"，并非谷歌官方名称）放开定制，允许每个产品用自己的色彩、字体与形状做主题；2021 年的 Material 3 / Material You 更进一步，用动态取色让系统从壁纸里取色，整部手机随一张图换装。规则最全的子风格，做产品用它——这是它在关联数字风格里的位置。",
+  ],
+  promptZh: "用质感设计风格做一个待办 App：纸片分层、海拔阴影定层级、圆形悬浮操作按钮、涟漪点击动效，干净、系统、有秩序。",
+  promptEn: "Build a to-do app in Material Design style: layered paper surfaces, elevation shadows for hierarchy, a round floating action button, ripple tap effects — clean, systematic, orderly.",
+  variants: [
+    {
+      label: "产品",
+      zh: "用质感设计风格做一个新闻 App 的首页：卡片式信息流、纸片分层、海拔阴影区分头条与列表、圆形悬浮操作按钮，清晰、有层级、易扫读。",
+      en: "Design a news app home screen in Material Design style: a card-based feed, layered paper surfaces, elevation shadows separating headlines from the list, a round floating action button — clear, layered, easy to scan.",
+    },
+    {
+      label: "品牌",
+      zh: "用质感设计风格做一个品牌官网的首页：白色纸面底、大号 Roboto 标题、圆角矩形卡片分层排列、海拔阴影定主次，克制、系统、可信。",
+      en: "Design a brand website homepage in Material Design style: a white paper ground, large Roboto headlines, rounded-rectangle cards in layered rows, elevation shadows setting priority — restrained, systematic, trustworthy.",
+    },
+    {
+      label: "仪表盘",
+      zh: "用质感设计风格做一个数据仪表盘：指标卡片按海拔分层、关键数字用质感紫强调、涟漪动效回应每一次点击，秩序感强、一眼见重点。",
+      en: "Design a data dashboard in Material Design style: metric cards layered by elevation, key numbers highlighted in Material purple, ripple effects answering every tap — strongly ordered, priorities visible at a glance.",
+    },
+  ],
+  palette: [
+    { hex: "#6750A4", name: "质感紫", role: "Material 3 基准种子色" },
+    { hex: "#FFFFFF", name: "纸面白", role: "纸片底色" },
+    { hex: "#212121", name: "墨色", role: "正文与标题" },
+    { hex: "#4285F4", name: "谷歌蓝", role: "点缀" },
+    { hex: "#34A853", name: "谷歌绿", role: "点缀" },
+    { hex: "#EA4335", name: "谷歌红", role: "点缀" },
+    { hex: "#FBBC04", name: "谷歌黄", role: "点缀" },
+  ],
+  typography: "Roboto（Apache 2.0，谷歌官方字体）。谷歌自家应用另用 Google Sans（专有字体，只作参考，不直接用；来源：9to5Google I/O 2018 报道）。",
+  composition: ["4/8dp 网格", "纸片分层", "海拔阴影定层级"],
+  forms: "纸片、圆角矩形、FAB 圆形按钮。",
+  texture: "纸面、海拔阴影、涟漪动效。",
+  donts: ["纸片不用在无层级可分的单页上（海拔无物可定）", "阴影不乱加——海拔即层级，同一层级用同一海拔", "涟漪动效只回应真实可点的元素，不可点的地方不给涟漪", "大胆色彩作点缀，不铺满全屏抢内容", "不与玻璃拟态、黏土拟态等子风格同时混用（先选一个主风格）"],
+  gallery: [
+    {
+      title: "质感设计 Material Design",
+      artist: "谷歌",
+      year: "2014—",
+      status: "版权期",
+      note: "看：界面是一叠有高度的\"纸片\"——海拔阴影、涟漪动效、FAB 悬浮按钮；规则最全的子风格。开源设计系统。",
+      link: "https://m3.material.io/",
+      linkLabel: "查看官网（Material 3）↗",
+    },
+    {
+      title: "Android 5.0 Lollipop",
+      artist: "谷歌",
+      year: "2014",
+      status: "版权期",
+      note: "看：质感设计第一次落地——通知变成卡片、最近任务变成一叠 3D 纸片；纸片隐喻从发布会走进每一部手机。",
+      link: "https://en.wikipedia.org/wiki/Android_5",
+      linkLabel: "查看介绍（Wikipedia）↗",
+    },
+    {
+      title: "Material Theming（俗称 Material Design 2）",
+      artist: "谷歌",
+      year: "2018",
+      status: "版权期",
+      note: "看：质感设计从统一制服变成\"做设计系统的系统\"——色彩、字体、形状都可按品牌定制；白色底面 + 谷歌四色点缀成为谷歌自家的主题。",
+      link: "https://9to5google.com/2018/05/11/google-material-design-theming-i-o-roundup/",
+      linkLabel: "查看报道（9to5Google）↗",
+    },
+    {
+      title: "Material You / Material 3",
+      artist: "谷歌",
+      year: "2021",
+      status: "版权期",
+      note: "看：动态取色——系统从壁纸里取一个种子色，展开成整套配色，锁屏、通知、设置、小部件随壁纸换装；质感设计从统一走向个人。",
+      link: "https://android-developers.googleblog.com/2022/02/material-you-coming-to-more-android.html?m=0",
+      linkLabel: "查看文章（Android Developers Blog）↗",
+    },
+    {
+      title: "Google I/O 2014 发布",
+      artist: "马蒂亚斯·杜阿尔特",
+      year: "2014",
+      status: "版权期",
+      note: "看：杜阿尔特登台揭开质感设计——\"一个一致的愿景，横跨手机、桌面与更远\"；纸片、海拔与涟漪第一次被讲成一套语言。",
+      link: "https://www.androidcentral.com/android-ui-design-holo-material-design-material-you",
+      linkLabel: "查看回顾（Android Central）↗",
+    },
+  ],
+  timeline: [
+    { year: "2014 年 6 月", text: "谷歌在 Google I/O 2014 发布质感设计（杜阿尔特主讲），\"纸片海拔\"把深度带回规则。" },
+    { year: "2014 年 11 月", text: "Android 5.0 Lollipop 正式推送（11 月 12 日），质感设计第一次落地到系统与应用；通知变卡片、最近任务变 3D 纸片叠。" },
+    { year: "2018 年 5 月", text: "Google I/O 2018 推出 Material Theming（媒体俗称\"Material Design 2\"，谷歌从未用此作官方名）——色彩、字体、形状全面可定制，谷歌自家主题定为白色底面 + 四色点缀。" },
+    { year: "2021 年", text: "Material 3 / Material You 发布（动态取色），随 Android 12（2021 年 10 月）上线；系统从壁纸取色，整机配色随壁纸而变。" },
+    { year: "2022 年 2 月", text: "谷歌宣布 Material You 的动态取色扩展到更多 Android 12 手机，包括三星、一加、OPPO、vivo、realme、小米等厂商的设备。" },
+  ],
+  figures: [
+    { name: "马蒂亚斯·杜阿尔特", note: "谷歌设计负责人，质感设计的主导者；2014 年在 Google I/O 上登台发布质感设计，2021 年又登台展示 Material You。" },
+  ],
+  influence: "从拟物化与扁平化的摆动中来。扁平化（2013）把深度拿走，质感设计（2014）把深度规则化——纸片、海拔、涟漪，一套可复制的语言。此后它的演变是\"规则不减，个性渐增\"：2018 年放开主题定制，2021 年用动态取色把个性交给每位用户。今天几乎所有主流设计系统都在\"扁平骨架 + 材质深度\"的混合态里，而质感设计是其中规则最全、落地最广的一套。",
+  relatedStyles: [
+    { name: "玻璃拟态", note: "扁平化之后另一条深度路线，模糊 + 半透明", href: "/styles/glassmorphism/" },
+    { name: "黏土拟态", note: "新拟态的友好继任者，膨胀圆润的 3D 造型", href: "/styles/claymorphism/" },
+    { name: "新拟态", note: "玻璃与黏土的直接前身", href: "/styles/neumorphism/" },
+    { name: "扁平化设计", note: "2013 年的转折点，质感设计回应它", href: "/styles/flat-design/" },
+    { name: "极简主义", note: "质感设计的克制一面", href: "/styles/minimalism/" },
+    { name: "拟物化", note: "纸片隐喻的材质源头", href: "/styles/skeuomorphism/" },
+  ],
+  relatedComponents: [
+    { name: "基础卡片", note: "质感纸片", href: "/components/entries/card-basic/" },
+    { name: "底部抽屉", note: "纸片从底部升起", href: "/components/entries/bottom-sheet/" },
+    { name: "移动端底部导航", note: "海拔阴影定层级", href: "/components/entries/mobile-tab-bar/" },
+    { name: "商品卡片", note: "卡片 + 海拔", href: "/components/entries/product-card/" },
+    { name: "英雄区", note: "纸面底 + 大号标题", href: "/components/entries/hero-section/" },
+    { name: "顶部应用栏", note: "质感设计的经典顶栏", href: "/components/entries/top-app-bar/" },
+  ],
+  keywords: ["质感设计", "Material Design", "Material 3", "Material You", "海拔阴影", "涟漪动效", "FAB", "纸片", "动态取色"],
+  imageBg: "/brand/styles/material-design-bg.webp",
+  imageAlt: "阿格莱亚身着质感设计风格：纸片分层、青绿圆盘与海拔阴影",
+  heroTone: "light",
+  footerNote: "草稿。种子色 #6750A4 来自第三方拆解文章转述，未在 m3.material.io 核对；\"Material Design 2\"从不是谷歌官方名；时间线只到 2022 年，Material 3 Expressive 等新进展未纳入；变体 prompt 未经真实模型出图验证。英文全文翻译后补。",
+};
+---
+
+<StylePage lang="zh" style={style} />

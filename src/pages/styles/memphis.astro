@@ -1,0 +1,133 @@
+---
+import StylePage from "../../views/StylePage.astro";
+
+// 孟菲斯条目 v0.1（2026-11-13）。正文见 workspace/goals/figma/entries/memphis-2026-11-13.md。
+const style = {
+  id: "memphis",
+  nameZh: "孟菲斯",
+  nameEn: "Memphis",
+  years: "1981–1987/1988",
+  origin: "意大利米兰",
+  definition: "孟菲斯是 1981 年诞生于米兰的设计团体，用玩具般的色彩与形状狂欢向功能主义宣战。",
+  definitionEn: "Memphis was a Milan design group (1981–1987/88) that declared war on functionalism with a toy-like carnival of color and shape.",
+  intro: [
+    "1980 年 12 月 11 日，一群年轻设计师聚在米兰索特萨斯的寓所，成立了孟菲斯团体（名字取自鲍勃·迪伦的歌《Stuck Inside of Mobile with the Memphis Blues Again》）。1981 年 9 月 18 日，他们在米兰 Arc '74 画廊办了首展，第一批作品一亮相就成了国际轰动。",
+    "孟菲斯的核心主张只有一句话：家具不必\"合理\"。它向功能主义与极简正统宣战——桌子可以歪，书架可以像个玩具人，廉价的塑料层压板、水磨石和撞色就是美的材料。灵感来自波普、媚俗、装饰艺术和层压板上的波浪纹，目标是制造\"坏品味\"的快乐。",
+    "团体只活了短短几年（解散年份在不同来源中有 1987 与 1988 两种说法），但它的视觉语言活了下来：今天的年轻品牌视觉、活动页面与 AI 生成插画里，处处都是孟菲斯的影子。",
+  ],
+  promptZh: "用孟菲斯风格设计一个 App 启动页：柠檬黄、热粉、青绿撞色，三角形、圆与锯齿几何漂浮排布，黑色轮廓线勾边，俏皮、好玩、像玩具一样。",
+  promptEn: "Design an app launch screen in Memphis style: clashing lemon yellow, hot pink and teal, floating triangles, circles and zigzags outlined in black — playful, toy-like, full of joy.",
+  variants: [
+    {
+      label: "海报",
+      zh: "用孟菲斯风格做一张音乐节海报：紫色底上漂浮着三角形、梯形与波浪线，水磨石碎点做背景，粗黑无衬线大字标题，热闹、反叛、好玩。",
+      en: "Design a music festival poster in Memphis style: triangles, trapezoids and squiggles floating on a purple background, terrazzo speckles as texture, a big bold black sans-serif headline — loud, rebellious, fun.",
+    },
+    {
+      label: "品牌",
+      zh: "用孟菲斯风格设计一个年轻零食品牌的包装：柠檬黄与热粉撞色、黑轮廓线的几何碎片、细菌纹样般的小波点，轻一点，只在局部用图案。",
+      en: "Design snack packaging for a young brand in Memphis style: clashing lemon yellow and hot pink, black-outlined geometric fragments, Bacterio-like squiggle dots — keep it light, patterns only in places.",
+    },
+    {
+      label: "网页",
+      zh: "用孟菲斯风格设计一个活动落地页：米白底、几何装饰条做分隔、锯齿与圆点点缀按钮，色彩只用在装饰上，正文保持可读。",
+      en: "Design an event landing page in Memphis style: an off-white background, geometric strips as dividers, zigzags and dots accenting buttons — color only in decoration, body text stays readable.",
+    },
+  ],
+  palette: [
+    { hex: "#F5D90A", name: "柠檬黄", role: "主色·点亮" },
+    { hex: "#FF2E88", name: "热粉", role: "主色·撞色" },
+    { hex: "#00B8A9", name: "青绿", role: "主色·平衡" },
+    { hex: "#7B2FBE", name: "紫", role: "辅色·撞色" },
+    { hex: "#111111", name: "曜黑", role: "轮廓线与文字" },
+    { hex: "#FFF6E8", name: "米白", role: "底色" },
+  ],
+  typography: "粗黑无衬线是第一选择，或几何拼合的字母。开源替代：Anton / Archivo Black（SIL OFL，可免费商用）做标题，Poppins / Montserrat（SIL OFL）做正文与几何感小字。标题可大字、紧排、偶尔旋转。",
+  composition: ["非对称堆叠，拒绝严格网格", "几何形漂浮排布，可出格、可旋转", "图案填满空白而不是留白", "用黑轮廓线统一所有元素", "色彩只做装饰，正文区保持可读"],
+  forms: "只用大胆的基本形与线条——三角形、梯形、圆、锯齿、波浪线；直线与曲线混用；元素可歪斜、可悬空。",
+  texture: "塑料层压板、水磨石碎点、黑轮廓线；细菌纹样式的小波点与曲线；彩色几何碎片；玩具般的圆球与小旗。",
+  donts: ["不用克制的中性灰调（那不是孟菲斯）", "不用严格对称与网格", "不用拟真材质、柔和渐变与细弱字体", "不要把撞色铺满正文区——装饰可以吵，文字必须能读"],
+  gallery: [
+    {
+      title: "索特萨斯《卡尔顿书架》",
+      artist: "埃托雷·索特萨斯",
+      year: "1981",
+      status: "版权期",
+      note: "看：书架长得像个举着手臂的玩具人——斜搁板、三角支撑、彩色层压板，功能让位给形状；孟菲斯最著名的图腾。",
+      link: "http://collections.vam.ac.uk/item/O539978/designs-for-carlton-bookcase-and-design-sottsass-ettore-jr/",
+      linkLabel: "查看原作（V&A 藏品页）↗",
+    },
+    {
+      title: "索特萨斯《细菌》层压板纹样",
+      artist: "埃托雷·索特萨斯",
+      year: "1978",
+      status: "版权期",
+      note: "看：显微镜下细菌培养皿般的小波点与曲线，印在廉价层压板上——孟菲斯的表面语言在团体成立前就已成型，后来铺满了卡萨布兰卡边柜的柜门。",
+      link: "https://www.modernismmuseum.org/ettore-sottsass",
+      linkLabel: "查看介绍（Modernism Museum）↗",
+    },
+    {
+      title: "德·卢奇《第一椅》",
+      artist: "米凯莱·德·卢奇",
+      year: "1983",
+      status: "版权期",
+      note: "看：圆盘靠背、球形扶手像环绕的行星，是孟菲斯唯一量产的设计——\"不合理\"的孟菲斯里最接近一把正常椅子的一把。（外链待补：未找到博物馆藏品页或官方页面。）",
+    },
+    {
+      title: "杜·帕斯基耶纺织品系列（《加蓬》1982）",
+      artist: "娜塔莉·杜·帕斯基耶",
+      year: "1980 年代",
+      status: "版权期",
+      note: "看：受非洲织物启发的几何印花——三角、圆点、锯齿在棉布上撞色；孟菲斯的图案语言最直接的载体。代表作《加蓬》，藏大都会艺术博物馆。",
+      link: "https://www.metmuseum.org/art/collection/search/484547",
+      linkLabel: "查看原作（Met 藏品页）↗",
+    },
+    {
+      title: "贝丁《超级灯》",
+      artist: "马尔蒂娜·贝丁",
+      year: "1981",
+      status: "版权期",
+      note: "看：一辆蓝色小拖车，顶着五六个彩色灯泡，像牵着走的玩具狗——灯不必是灯，可以是宠物；孟菲斯最赚钱的单品，原型藏 V&A。",
+      link: "http://collections.vam.ac.uk/item/O1177310/super-lamp-lamp-bedin-martine/",
+      linkLabel: "查看原作（V&A 藏品页）↗",
+    },
+  ],
+  timeline: [
+    { year: "1978", text: "索特萨斯为 Abet Laminati 设计《细菌》Bacterio 层压板纹样，孟菲斯的表面语言先行。" },
+    { year: "1980 年 12 月 11 日", text: "索特萨斯寓所的米兰聚会，孟菲斯团体成立；名字取自鲍勃·迪伦的歌《Stuck Inside of Mobile with the Memphis Blues Again》。" },
+    { year: "1981 年 9 月 18 日", text: "首展在米兰 Arc '74 画廊开幕，卡尔顿书架、超级灯等第一批作品亮相，国际轰动。" },
+    { year: "1983", text: "德·卢奇设计《第一椅》，属团体第三个系列，也是孟菲斯唯一量产的设计。" },
+    { year: "1985", text: "索特萨斯离开团体。" },
+    { year: "1987/1988", text: "团体解散——年份有分歧：1987 说（最后一批藏品出于 1987 年）与 1988 说（Cooper Hewitt 传记等）并存，本条目不取定论。" },
+    { year: "2021", text: "维特拉设计博物馆举办「Memphis: 40 Years of Kitsch and Elegance」四十周年展，孟菲斯复兴进入主流视野。" },
+  ],
+  figures: [
+    { name: "埃托雷·索特萨斯", note: "创始人，孟菲斯的灵魂，卡尔顿书架与细菌纹样的作者。" },
+    { name: "米凯莱·德·卢奇", note: "核心成员，《第一椅》的作者。" },
+    { name: "娜塔莉·杜·帕斯基耶", note: "创始成员，纺织品与图案语言的主将，1987 年后转向绘画。" },
+    { name: "乔治·索登", note: "创始成员，英国设计师。" },
+    { name: "马尔蒂娜·贝丁", note: "创始成员，《超级灯》的作者。" },
+  ],
+  influence: "从波普艺术、装饰艺术与媚俗中来，是后现代设计最鲜明的代表；与包豪斯的功能主义正面对立，又共享几何与原色的血脉。解散后它的图案语言从未消失：2010 年代起的复兴让它进入当代 UI 图案（几何装饰、撞色背景、水磨石纹理）与年轻品牌视觉（零食、潮牌、活动页），也是 AI 生成插画的热门风格之一——几何装饰极易迁移为背景图案。",
+  relatedStyles: [
+    { name: "波普艺术", note: "撞色与大众文化的源头", href: "/styles/pop-art/" },
+    { name: "后现代主义", note: "孟菲斯是其设计代表", href: "/styles/postmodernism/" },
+    { name: "装饰艺术", note: "几何装饰的先辈", href: "/styles/art-deco/" },
+    { name: "风格派", note: "几何与原色的另一条路", href: "/styles/de-stijl/" },
+    { name: "包豪斯", note: "孟菲斯宣战的对象", href: "/styles/bauhaus/" },
+  ],
+  relatedComponents: [
+    { name: "主视觉区", note: "撞色几何主视觉", href: "/components/entries/hero-section/" },
+    { name: "引导轮播", note: "玩具感引导页", href: "/components/entries/onboarding-carousel/" },
+    { name: "商品卡片", note: "年轻品牌商品卡", href: "/components/entries/product-card/" },
+    { name: "图片轮播", note: "图案轮播", href: "/components/entries/image-carousel/" },
+  ],
+  keywords: ["孟菲斯", "后现代", "撞色", "几何", "水磨石", "索特萨斯", "1980 年代", "玩具感"],
+  imageBg: "/brand/styles/memphis-bg.webp",
+  imageAlt: "阿格莱亚身着孟菲斯风格：黄色太阳、粉色斜板与青绿几何，波浪线与圆点",
+  heroTone: "light",
+  footerNote: "草稿。画廊五幅作品均为版权期，只放文字介绍 + 外链，不直接放图。英文全文翻译后补。",
+};
+---
+
+<StylePage lang="zh" style={style} />

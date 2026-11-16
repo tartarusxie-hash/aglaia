@@ -1,0 +1,215 @@
+---
+import Base from "../layouts/Base.astro";
+import { dict, nameOf, type Lang } from "../lib/i18n";
+import type { Item } from "../lib/content";
+import LibraryCrumb from "../components/LibraryCrumb.astro";
+
+interface Props { lang: Lang; item: Item }
+const { lang, item } = Astro.props;
+const d = dict(lang);
+const en = lang === "en";
+const COLORS = ["#16130e", "#4c463c", "#e2480d", "#0f766e", "#1d4ed8", "#b07d10", "#f7f5f0", "#fffdf8"];
+const EASINGS = [
+  { id: "expo", label: "easeOutExpo · 利落落稳", css: "cubic-bezier(0.22, 1, 0.36, 1)" },
+  { id: "back", label: "easeOutBack · 带回弹", css: "cubic-bezier(0.34, 1.56, 0.64, 1)" },
+  { id: "inout", label: "easeInOut · 对称呼吸", css: "cubic-bezier(0.65, 0, 0.35, 1)" },
+  { id: "linear", label: "linear · 匀速", css: "linear" },
+];
+---
+
+<Base lang={lang} title={nameOf(lang, item)} description={item.summary_zh} current="learn">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10">
+    <LibraryCrumb lang={lang} section="learn" trail={[{ label: d.learn.lab }, { label: nameOf(lang, item) }]} />
+    <h1 class="mt-8 text-3xl font-bold tracking-tight">{nameOf(lang, item)}</h1>
+    <p class="mt-2 max-w-2xl leading-relaxed text-ink2">{en ? item.description : item.summary_zh}</p>
+
+    {item.id === "lab-easing" && (
+      <section class="mt-8 rounded-lg border border-linestrong bg-surface p-5">
+        <div class="flex flex-wrap gap-2" id="ez-presets">
+          {EASINGS.map((e, i) => <button data-easing={e.css} class={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${i === 0 ? "border-ink bg-ink text-bg" : "border-linestrong hover:bg-subtle"}`}>{e.label}</button>)}
+        </div>
+        <label class="mt-5 block max-w-md">
+          <span class="flex justify-between text-sm font-medium"><span>{en ? "Duration" : "时长"}</span><span class="font-mono text-muted" id="ez-dur-val">600ms</span></span>
+          <input id="ez-dur" type="range" min="150" max="1600" step="50" value="600" class="mt-2 w-full accent-[#141414]" />
+          <span class="mt-1 flex justify-between text-xs text-muted"><span>150ms {en ? "micro-feedback" : "微反馈"}</span><span>400ms {en ? "Doherty threshold" : "Doherty 阈值"}</span><span>1600ms {en ? "already slow" : "已经算慢"}</span></span>
+        </label>
+        <div id="ez-stage" class="relative mt-6 h-16 overflow-hidden rounded-md border border-line bg-subtle">
+          <div id="ez-ball" class="absolute left-2 top-1/2 h-11 w-11 -translate-y-1/2 rounded-full bg-ink"></div>
+        </div>
+        <div class="mt-4 flex flex-wrap items-center gap-2">
+          <code id="ez-code" class="rounded-md border border-line bg-subtle px-3 py-2 font-mono text-[13px]">transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);</code>
+          <button id="ez-copy" class="rounded-md border border-linestrong px-3.5 py-2 text-sm hover:bg-subtle">{d.entry.copy}</button>
+        </div>
+        <script>
+          const ball = document.getElementById("ez-ball"); const stage = document.getElementById("ez-stage");
+          const dur = document.getElementById("ez-dur") as HTMLInputElement; const durVal = document.getElementById("ez-dur-val");
+          const code = document.getElementById("ez-code");
+          let easing = "cubic-bezier(0.22, 1, 0.36, 1)"; let anim: Animation | undefined;
+          function play() {
+            if (!ball || !stage) return;
+            anim?.cancel();
+            const dist = stage.clientWidth - 64;
+            const d = Number(dur.value);
+            anim = ball.animate([
+              { transform: "translate(0, -50%)" },
+              { transform: `translate(${dist}px, -50%)`, offset: 0.62 },
+              { transform: `translate(${dist}px, -50%)`, offset: 0.72 },
+              { transform: "translate(0, -50%)" },
+            ], { duration: d / 0.62, easing: "linear" });
+            // 用两段动画实现「去程所选曲线 + 停顿 + 回程 ease-in-out ×0.6」
+            anim.cancel();
+            const go = ball.animate([{ transform: "translate(0,-50%)" }, { transform: `translate(${dist}px,-50%)` }], { duration: d, easing, fill: "forwards" });
+            go.finished.then(() => new Promise((r) => setTimeout(r, 450))).then(() => {
+              ball.animate([{ transform: `translate(${dist}px,-50%)` }, { transform: "translate(0,-50%)" }], { duration: d * 0.6, easing: "cubic-bezier(0.65, 0, 0.35, 1)", fill: "forwards" });
+            }).catch(() => {});
+          }
+          document.querySelectorAll("#ez-presets [data-easing]").forEach((b) => b.addEventListener("click", () => {
+            document.querySelectorAll("#ez-presets [data-easing]").forEach((x) => (x.className = "rounded-full border px-3.5 py-1.5 text-sm transition-colors border-linestrong hover:bg-subtle"));
+            b.className = "rounded-full border px-3.5 py-1.5 text-sm transition-colors border-ink bg-ink text-bg";
+            easing = (b as HTMLElement).dataset.easing || easing;
+            if (code) code.textContent = `transition-timing-function: ${easing};`;
+            play();
+          }));
+          dur?.addEventListener("input", () => { if (durVal) durVal.textContent = `${dur.value}ms`; play(); });
+          document.getElementById("ez-copy")?.addEventListener("click", async (ev) => {
+            try { await navigator.clipboard.writeText(code?.textContent || ""); const b = ev.currentTarget as HTMLElement; const old = b.textContent; b.textContent = "✓"; setTimeout(() => (b.textContent = old), 1400); } catch {}
+          });
+          play();
+        </script>
+      </section>
+    )}
+
+    {item.id === "lab-fitts" && (
+      <section class="mt-8 rounded-lg border border-linestrong bg-surface p-5">
+        <div class="flex flex-wrap items-center gap-3">
+          <button id="ft-start" class="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-onprimary hover:opacity-90">{en ? "Start timing" : "开始计时"}</button>
+          <button id="ft-reset" class="rounded-md border border-linestrong px-4 py-2 text-sm hover:bg-subtle">{en ? "Reset scores" : "重置成绩"}</button>
+          <span id="ft-hint" class="text-sm text-muted">{en ? "Press start, then click either target." : "点「开始计时」，然后点任意一个目标。"}</span>
+        </div>
+        <div class="relative mt-5 flex h-44 items-center justify-around rounded-md border border-line bg-subtle px-4">
+          <button id="ft-small" disabled class="grid h-11 w-11 place-items-center rounded-md bg-ink text-xs font-bold text-bg disabled:opacity-30">44px</button>
+          <button id="ft-big" disabled class="grid h-[72px] w-[118px] place-items-center rounded-md bg-ink text-xs font-bold text-bg disabled:opacity-30">118×72</button>
+        </div>
+        <dl class="mt-5 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+          <div class="rounded-md border border-line p-3"><dt class="text-muted">{en ? "Small target avg" : "小目标平均"}</dt><dd class="mt-1 font-mono text-lg font-bold" id="ft-avg-s">—</dd></div>
+          <div class="rounded-md border border-line p-3"><dt class="text-muted">{en ? "Big target avg" : "大目标平均"}</dt><dd class="mt-1 font-mono text-lg font-bold" id="ft-avg-b">—</dd></div>
+          <div class="rounded-md border border-line p-3"><dt class="text-muted">{en ? "Big is faster by" : "大目标快了"}</dt><dd class="mt-1 font-mono text-lg font-bold" id="ft-diff">—</dd></div>
+          <div class="rounded-md border border-line p-3"><dt class="text-muted">{en ? "Trials (S / B)" : "已测次数（小/大）"}</dt><dd class="mt-1 font-mono text-lg font-bold" id="ft-count">0 / 0</dd></div>
+        </dl>
+        <script>
+          let t0 = 0; const S: number[] = []; const B: number[] = [];
+          const small = document.getElementById("ft-small") as HTMLButtonElement; const big = document.getElementById("ft-big") as HTMLButtonElement;
+          const hint = document.getElementById("ft-hint");
+          const avg = (a: number[]) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null);
+          function render() {
+            const as = avg(S), ab = avg(B);
+            const set = (id: string, v: string) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            set("ft-avg-s", as == null ? "—" : `${as}ms`); set("ft-avg-b", ab == null ? "—" : `${ab}ms`);
+            set("ft-diff", as != null && ab != null && as > 0 ? `${Math.round((1 - ab / as) * 100)}%` : "—");
+            set("ft-count", `${S.length} / ${B.length}`);
+          }
+          function stop(which: "s" | "b") {
+            if (!t0) return;
+            const dt = performance.now() - t0; t0 = 0;
+            (which === "s" ? S : B).push(dt);
+            small.disabled = true; big.disabled = true;
+            if (hint) hint.textContent = `${Math.round(dt)}ms — ${"再点一次「开始计时」继续"}`;
+            render();
+          }
+          document.getElementById("ft-start")?.addEventListener("click", () => { t0 = performance.now(); small.disabled = false; big.disabled = false; if (hint) hint.textContent = "计时中——点一个目标！"; });
+          small?.addEventListener("click", () => stop("s")); big?.addEventListener("click", () => stop("b"));
+          document.getElementById("ft-reset")?.addEventListener("click", () => { S.length = 0; B.length = 0; render(); });
+        </script>
+      </section>
+    )}
+
+    {item.id === "lab-contrast" && (
+      <section class="mt-8 rounded-lg border border-linestrong bg-surface p-5">
+        <div class="grid gap-6 md:grid-cols-2">
+          <div>
+            <div class="text-sm font-semibold">{en ? "Text color" : "文字色"}</div>
+            <div class="mt-2 flex flex-wrap gap-2" id="ct-fg">
+              {COLORS.map((c, i) => <button data-color={c} aria-label={c} class={`h-9 w-9 rounded-md border ${i === 0 ? "ring-2 ring-ink ring-offset-2" : "border-linestrong"}`} style={`background:${c}`}></button>)}
+            </div>
+            <div class="mt-5 text-sm font-semibold">{en ? "Background" : "背景色"}</div>
+            <div class="mt-2 flex flex-wrap gap-2" id="ct-bg">
+              {COLORS.map((c, i) => <button data-color={c} aria-label={c} class={`h-9 w-9 rounded-md border ${i === 7 ? "ring-2 ring-ink ring-offset-2" : "border-linestrong"}`} style={`background:${c}`}></button>)}
+            </div>
+          </div>
+          <div>
+            <div id="ct-preview" class="grid h-32 place-items-center rounded-md border border-line px-5 text-center text-lg font-medium" style="color:#16130e;background:#fffdf8">设计先要被看见，然后才是被喜欢。</div>
+            <div class="mt-4 flex flex-wrap gap-2" id="ct-badges">
+              <span class="rounded-full px-3 py-1 text-sm font-semibold" id="ct-ratio">—</span>
+              <span class="rounded-full px-3 py-1 text-sm font-semibold" id="ct-aa">AA ≥4.5</span>
+              <span class="rounded-full px-3 py-1 text-sm font-semibold" id="ct-aaa">AAA ≥7</span>
+              <span class="rounded-full px-3 py-1 text-sm font-semibold" id="ct-large">大字 AA ≥3</span>
+            </div>
+            <p class="mt-3 text-sm leading-relaxed text-ink2">{en ? "Body text needs ≥ 4.5:1 (AA); large headings ≥ 3:1. If it doesn't reach, don't blame users for squinting." : "正文需要 ≥ 4.5:1（AA），大标题 ≥ 3:1；到不了，就别怪用户眯眼。"}</p>
+          </div>
+        </div>
+        <script>
+          let fg = "#16130e", bg = "#fffdf8";
+          const lum = (hex: string) => {
+            const c = hex.replace("#", "");
+            const f = (v: number) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4); };
+            return 0.2126 * f(parseInt(c.slice(0, 2), 16)) + 0.7152 * f(parseInt(c.slice(2, 4), 16)) + 0.0722 * f(parseInt(c.slice(4, 6), 16));
+          };
+          function badge(id: string, pass: boolean, text: string) {
+            const el = document.getElementById(id); if (!el) return;
+            el.textContent = text; el.style.background = pass ? "#166534" : "#b91c1c"; el.style.color = "#fff";
+          }
+          function render() {
+            const L1 = lum(fg), L2 = lum(bg);
+            const ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+            const pv = document.getElementById("ct-preview"); if (pv) { pv.style.color = fg; pv.style.background = bg; }
+            const r = document.getElementById("ct-ratio"); if (r) { r.textContent = `${ratio.toFixed(2)} : 1`; r.style.background = "#141414"; r.style.color = "#fff"; }
+            badge("ct-aa", ratio >= 4.5, `正文 AA ≥4.5 ${ratio >= 4.5 ? "✓" : "✗"}`);
+            badge("ct-aaa", ratio >= 7, `正文 AAA ≥7 ${ratio >= 7 ? "✓" : "✗"}`);
+            badge("ct-large", ratio >= 3, `大字 AA ≥3 ${ratio >= 3 ? "✓" : "✗"}`);
+          }
+          const bind = (id: string, set: (c: string) => void) => {
+            const wrap = document.getElementById(id);
+            wrap?.querySelectorAll("[data-color]").forEach((b) => b.addEventListener("click", () => {
+              wrap.querySelectorAll("[data-color]").forEach((x) => x.classList.remove("ring-2", "ring-ink", "ring-offset-2"));
+              b.classList.add("ring-2", "ring-ink", "ring-offset-2");
+              set((b as HTMLElement).dataset.color || ""); render();
+            }));
+          };
+          bind("ct-fg", (c) => (fg = c)); bind("ct-bg", (c) => (bg = c));
+          render();
+        </script>
+      </section>
+    )}
+
+    {item.id === "lab-type-scale" && (
+      <section class="mt-8 rounded-lg border border-linestrong bg-surface p-5">
+        <label class="block max-w-md">
+          <span class="flex justify-between text-sm font-medium"><span>{en ? "Base size" : "基准字号"}</span><span class="font-mono text-muted" id="ts-val">16px</span></span>
+          <input id="ts-base" type="range" min="13" max="20" step="0.5" value="16" class="mt-2 w-full accent-[#141414]" />
+          <span class="text-xs text-muted">{en ? "Ratio fixed at 1.25 (major third) — the same scale as this site's tokens." : "比例固定 1.25（大三度），与本站令牌字阶一致。"}</span>
+        </label>
+        <div id="ts-rows" class="mt-6 space-y-3 border-t border-line pt-5"></div>
+        <script>
+          const NAMES = [["H1 大标题", 4], ["H2 标题", 3], ["H3 小标题", 2], ["Lead 导语", 1], ["Body 正文", 0], ["Caption 辅助", -1]] as const;
+          const rows = document.getElementById("ts-rows"); const input = document.getElementById("ts-base") as HTMLInputElement;
+          const val = document.getElementById("ts-val");
+          function render() {
+            const base = Number(input.value);
+            if (val) val.textContent = `${base}px`;
+            if (!rows) return;
+            rows.innerHTML = NAMES.map(([name, step]) => {
+              const px = base * Math.pow(1.25, step);
+              const shown = Math.min(px, 46);
+              return `<div class="flex items-baseline gap-4"><span class="w-20 shrink-0 text-right font-mono text-xs text-muted">${px.toFixed(1)}px</span><span style="font-size:${shown}px;line-height:1.25" class="${step >= 2 ? "font-bold" : ""}">${name}</span><span class="font-mono text-[11px] text-muted">×1.25^${step}</span></div>`;
+            }).join("");
+          }
+          input?.addEventListener("input", render);
+          render();
+        </script>
+      </section>
+    )}
+
+    {en && <p class="mt-6 inline-block rounded-md border border-line bg-subtle px-3 py-1.5 text-sm text-ink2">{d.learn.enPending}</p>}
+    <div class="prose-aglaia mt-6 max-w-3xl" set:html={item.html} />
+  </div>
+</Base>
