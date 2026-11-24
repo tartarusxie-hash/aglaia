@@ -3,6 +3,10 @@
 // （见 src/index.js 与 src/db.js）；新增查询时这里要同步加分支，
 // 否则测试会抛 "unsupported SQL"——这是故意的，防止静默假通过。
 //
+// 注意：迁移 DDL 走 prepare().run() 逐条执行（真实 D1 的 exec() 会按行
+// 切分，多行 CREATE TABLE 会失败，见 src/db.js 的注释）。mock 的 exec()
+// 保留但 worker 不再用它跑迁移——不要把 exec 当成迁移的验证手段。
+//
 // 用法：const db = new MockD1(); const env = { DB: db };
 // 测试可直接读写 db.users / db.sessions 做断言与状态操纵
 // （例如把会话改过期）。
@@ -17,6 +21,7 @@ export class MockD1 {
     this.usersByEmail = new Map(); // email -> id
     this.sessions = new Map(); // id -> row
     this.execCalls = [];
+    this.ddlCalls = []; // ensureDb 逐条跑的迁移 DDL（CREATE TABLE / CREATE INDEX）
   }
 
   async exec(sql) {
@@ -108,6 +113,11 @@ export class MockD1 {
   }
 
   _run(q, p) {
+    // 迁移 DDL：CREATE TABLE / CREATE INDEX（mock 不建真实表，只记调用）
+    if (q.startsWith("create table if not exists") || q.startsWith("create index if not exists")) {
+      this.ddlCalls.push(q);
+      return { success: true, meta: { changes: 0 } };
+    }
     // 官方账号种子：INSERT ... SELECT ... WHERE NOT EXISTS
     if (q.startsWith("insert into users") && q.includes("where not exists")) {
       const [id, nickname, email, passwordHash, presetId, now, emailCheck] = p;

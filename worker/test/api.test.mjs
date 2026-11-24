@@ -9,7 +9,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import worker from "../src/index.js";
-import { __resetMigrationForTests, OFFICIAL_EMAIL, OFFICIAL_PASSWORD_HASH } from "../src/db.js";
+import { __resetMigrationForTests, OFFICIAL_EMAIL, OFFICIAL_PASSWORD_HASH, splitMigrationStatements } from "../src/db.js";
 import { MIGRATION_SQL } from "../src/migration-sql.js";
 import { verifyPassword } from "../src/crypto.js";
 import { MockD1 } from "./mock-d1.mjs";
@@ -68,6 +68,22 @@ async function register(env, overrides = {}) {
 test("迁移 SQL 文件与 worker 内联的 SQL 一致", () => {
   const fileSql = readFileSync(join(TEST_DIR, "..", "migrations", "0001_init.sql"), "utf8");
   assert.equal(MIGRATION_SQL, fileSql);
+});
+
+test("迁移拆分：注释去掉、拆成 6 条完整 DDL，逐条跑进 mock", async () => {
+  const stmts = splitMigrationStatements(MIGRATION_SQL);
+  assert.equal(stmts.length, 6);
+  assert.ok(stmts.every((s) => !s.includes("--")), "拆出的语句里不得残留注释");
+  assert.ok(stmts.filter((s) => s.toLowerCase().startsWith("create table")).length === 2);
+  assert.ok(stmts.filter((s) => s.toLowerCase().startsWith("create index")).length === 4);
+  // 关键回归：多行 CREATE TABLE 必须保持完整（真实 D1 的 exec() 按行
+  // 切分会把它切碎，2026-11-19 曾因此 500；逐条 prepare().run() 才安全）
+  assert.ok(stmts[0].includes("avatar_type") && stmts[0].includes("created_at"));
+  const env = freshEnv();
+  const res = await register(env);
+  assert.equal(res.status, 201);
+  assert.equal(env.DB.ddlCalls.length, 6);
+  assert.equal(env.DB.execCalls.length, 0);
 });
 
 test("注册成功：201 + user 对象 + 会话 Cookie，且不含 password_hash", async () => {

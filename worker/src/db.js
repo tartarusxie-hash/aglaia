@@ -26,6 +26,22 @@ SELECT ?, ?, ?, ?, 'preset', ?, 'official', ?
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = ?)
 `;
 
+// D1 的 exec() 会把输入按行切分后逐行发给数据库（workerd 实现，
+// 见 cloudflare/workerd 的 D1DatabaseSession.exec），多行 CREATE TABLE
+// 会被切碎成 "incomplete input" 而失败（2026-11-19 真实 D1 上实测，
+// 单元测试的 mock exec 照单全收所以没暴露）。因此迁移改为逐条
+// prepare().run()；拆分时先去掉 -- 注释行，再按 ; 切分。
+export function splitMigrationStatements(sql) {
+  const withoutComments = sql
+    .split("\n")
+    .filter((line) => !line.trimStart().startsWith("--"))
+    .join("\n");
+  return withoutComments
+    .split(";")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
 // 每个 isolate 只迁移一次；失败时清掉缓存，下个请求重试。
 let migratePromise = null;
 
@@ -33,7 +49,9 @@ export async function ensureDb(env) {
   if (!env.DB) return false;
   if (!migratePromise) {
     migratePromise = (async () => {
-      await env.DB.exec(MIGRATION_SQL);
+      for (const stmt of splitMigrationStatements(MIGRATION_SQL)) {
+        await env.DB.prepare(stmt).run();
+      }
       const now = Math.floor(Date.now() / 1000);
       await env.DB.prepare(OFFICIAL_SEED_SQL)
         .bind(
