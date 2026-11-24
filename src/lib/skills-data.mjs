@@ -4,8 +4,9 @@
 // 因此以下条目被排除：claude-seo、seo-skills（SEO/GEO，且 seo-skills 许可不明）、
 // figma/mcp-server-guide（无许可，受 Figma 开发者条款约束）、motion-ui（许可不明）、
 // himoose/aeo-skills、dev-gtm-claude-skills（SEO/GEO）、noxpublishing/mobile-design-mcp
-// （非商业许可）、anima / 3dviz-pro-max / mobbin-skill（未核实）。
-// stars 为 2026-11-15 核实值；按 stars 降序排列，Landingfolio 无 GitHub 星数，排最后。
+// （非商业许可）、anima / mobbin-skill（未核实）。
+// stars 为 2026-11-15 核实值，3dviz-pro-max 为 2026-11-16 核实值（MIT 许可已对原仓库复核）；
+// 按 stars 降序排列，Landingfolio 无 GitHub 星数，排最后。
 
 export const SKILLS = [
   {
@@ -163,6 +164,17 @@ export const SKILLS = [
     category: "motion",
     summaryZh: "22 个 skills + 27 个插件：Three.js、GSAP、R3F、Motion、Lottie、Rive、Spline、Blender 等。",
     summaryEn: "22 skills + 27 plugins: Three.js, GSAP, R3F, Motion, Lottie, Rive, Spline, Blender and more.",
+  },
+  {
+    id: "3dviz-pro-max",
+    name: "3dviz-pro-max",
+    repo: "https://github.com/viettranx/3dviz-pro-max",
+    author: "Viettranx",
+    license: "MIT",
+    stars: 1346,
+    category: "motion",
+    summaryZh: "把一句话想法变成可交互的 Three.js / Blender 3D 场景：223 个配方、440 条知识记录、22 套组件套件、37 个可运行示例，带渲染帧自检。",
+    summaryEn: "Turns a plain-language idea into an interactive Three.js/Blender 3D scene: 223 recipes, 440 knowledge records, 22 kits, 37 runnable studies, with rendered-frame self-checks.",
   },
   {
     id: "agentic-tools",
